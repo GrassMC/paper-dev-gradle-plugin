@@ -39,15 +39,15 @@ class PluginDependencies(project: Project) {
 data class Dependency(@JsonIgnore @Input val name: String) {
     @Input
     @Optional
-    var load: LoadOrder = LoadOrder.OMIT
+    var load: LoadOrder? = null
 
     @Input
     @Optional
-    var required: Boolean = true
+    var required: Boolean? = null
 
     @Input
     @Optional
-    var joinClasspath: Boolean = true
+    var joinClasspath: Boolean? = null
 
     enum class LoadOrder {
         BEFORE,
