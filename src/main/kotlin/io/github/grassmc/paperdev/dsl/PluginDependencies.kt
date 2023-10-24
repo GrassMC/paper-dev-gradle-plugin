@@ -16,27 +16,42 @@
 
 package io.github.grassmc.paperdev.dsl
 
+import com.fasterxml.jackson.annotation.JsonIgnore
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.Project
+import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.Nested
+import org.gradle.api.tasks.Optional
 import org.gradle.kotlin.dsl.container
 
-class PaperPluginDependencies(project: Project) {
+class PluginDependencies(project: Project) {
+    @Nested
     val bootstrap = project.container<Dependency>()
+
+    @Nested
     val server = project.container<Dependency>()
 
     fun bootstrap(action: NamedDomainObjectContainer<Dependency>.() -> Unit) = action(bootstrap)
 
     fun server(action: NamedDomainObjectContainer<Dependency>.() -> Unit) = action(server)
+}
 
-    enum class DependencyLoadOrder {
+data class Dependency(@JsonIgnore val name: String) {
+    @Input
+    @Optional
+    var load: LoadOrder = LoadOrder.OMIT
+
+    @Input
+    @Optional
+    var required: Boolean = true
+
+    @Input
+    @Optional
+    var joinClasspath: Boolean = true
+
+    enum class LoadOrder {
         BEFORE,
         AFTER,
         OMIT
-    }
-
-    data class Dependency(private val name: String) {
-        var load: DependencyLoadOrder = DependencyLoadOrder.OMIT
-        var required: Boolean = true
-        var joinClasspath: Boolean = true
     }
 }

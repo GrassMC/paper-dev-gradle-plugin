@@ -16,67 +16,109 @@
 
 package io.github.grassmc.paperdev.dsl
 
-import org.gradle.api.NamedDomainObjectContainer
+import com.fasterxml.jackson.annotation.JsonIgnore
+import com.fasterxml.jackson.annotation.JsonPropertyOrder
+import com.fasterxml.jackson.annotation.JsonValue
 import org.gradle.api.Project
+import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.Nested
+import org.gradle.api.tasks.Optional
 import org.gradle.kotlin.dsl.container
 import org.gradle.kotlin.dsl.listProperty
 import org.gradle.kotlin.dsl.property
 
-class PaperPluginYml(@Transient private val project: Project) {
-    val name = stringProperty()
-    val version = stringProperty()
-    val main = stringProperty()
-    val apiVersion = property<ApiVersion>()
-    val description = stringProperty()
-    val authors = stringListProperty()
-    val contributors = stringListProperty()
-    val website = stringProperty()
+@JsonPropertyOrder(
+    "name",
+    "main",
+    "bootstrapper",
+    "loader",
+    "provides",
+    "has-open-classloader",
+    "version",
+    "description",
+    "authors",
+    "contributors",
+    "website",
+    "prefix",
+    "load",
+    "defaultPerm",
+    "permissions",
+    "api-version",
+    "dependencies",
+)
+class PaperPluginYml(@JsonIgnore private val project: Project) : PermissionContainer {
+    @Input
+    val name = project.objects.property<String>()
 
-    val bootstrapper = stringProperty()
-    val loader = stringProperty()
-    val provides = stringListProperty()
-    val hasOpenClassloader = booleanProperty()
+    @Input
+    val version = project.objects.property<String>()
 
-    val prefix = stringProperty()
-    val load = property<PluginLoadOrder>()
+    @Input
+    val main = project.objects.property<String>()
 
-    val defaultPermission = property<PermissionDefault>()
-    val permissions = project.container<Permission>()
+    @Input
+    val apiVersion = project.objects.property<ApiVersion>()
 
-    val dependencies: PaperPluginDependencies = PaperPluginDependencies(project)
+    @Input
+    @Optional
+    val description = project.objects.property<String>()
 
-    fun permissions(action: NamedDomainObjectContainer<Permission>.() -> Unit) = action(permissions)
+    @Input
+    @Optional
+    val authors = project.objects.listProperty<String>()
 
-    fun dependencies(action: PaperPluginDependencies.() -> Unit) = action(dependencies)
+    @Input
+    @Optional
+    val contributors = project.objects.listProperty<String>()
 
-    private inline fun <reified T> property() = project.objects.property<T>()
+    @Input
+    @Optional
+    val website = project.objects.property<String>()
 
-    private fun stringProperty() = project.objects.property<String>()
+    @Input
+    @Optional
+    val bootstrapper = project.objects.property<String>()
 
-    private fun booleanProperty() = project.objects.property<Boolean>()
+    @Input
+    @Optional
+    val loader = project.objects.property<String>()
 
-    private fun stringListProperty() = project.objects.listProperty<String>()
+    @Input
+    @Optional
+    val provides = project.objects.listProperty<String>()
 
-    enum class ApiVersion {
-        V1_19,
-        V1_20,
+    @Input
+    @Optional
+    val hasOpenClassloader = project.objects.property<Boolean>()
+
+    @Input
+    @Optional
+    val prefix = project.objects.property<String>()
+
+    @Input
+    @Optional
+    val load = project.objects.property<PluginLoadOrder>()
+
+    override val defaultPermission = project.objects.property<PermissionDefault>()
+
+    override val permissions = project.container<Permission>()
+
+    @Nested
+    val dependencies: PluginDependencies = PluginDependencies(project)
+
+    fun dependencies(action: PluginDependencies.() -> Unit) = action(dependencies)
+
+    enum class ApiVersion(@JsonValue val version: String) {
+        V1_19("1.19"),
+        V1_20("1.20");
+
+        companion object {
+            val Default = V1_19
+        }
     }
 
     enum class PluginLoadOrder {
         STARTUP,
         POSTWORLD
-    }
-
-    enum class PermissionDefault {
-        TRUE,
-        FALSE,
-        OP,
-        NOT_OP
-    }
-
-    data class Permission(val name: String) {
-        var description: String? = null
-        var default: PermissionDefault? = null
-        var children: Map<String, Boolean> = emptyMap()
     }
 }
