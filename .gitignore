@@ -5,3 +5,7 @@
 build
 
 .idea/*
+!.idea/codeStyles
+!.idea/copyright
+!.idea/inspectionProfiles
+!.idea/scopes
