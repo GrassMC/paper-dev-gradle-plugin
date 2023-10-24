@@ -12,6 +12,12 @@ plugins {
 group = prop("group")
 version = prop("version")
 
+dependencies {
+    implementation(platform(libs.jackson.bom))
+    implementation(libs.jackson.module.kotlin)
+    implementation(libs.jackson.dataformat.yaml)
+}
+
 kotlin {
     jvmToolchain {
         languageVersion = JavaLanguageVersion.of(17)
