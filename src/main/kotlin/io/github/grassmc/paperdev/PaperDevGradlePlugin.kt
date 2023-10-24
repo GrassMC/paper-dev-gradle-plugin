@@ -24,7 +24,10 @@ import org.gradle.api.file.Directory
 import org.gradle.api.plugins.JavaPlugin
 import org.gradle.api.provider.Provider
 import org.gradle.jvm.tasks.Jar
-import org.gradle.kotlin.dsl.*
+import org.gradle.kotlin.dsl.apply
+import org.gradle.kotlin.dsl.assign
+import org.gradle.kotlin.dsl.register
+import org.gradle.kotlin.dsl.withType
 
 abstract class PaperDevGradlePlugin : Plugin<Project> {
     override fun apply(project: Project): Unit = with(project) {
@@ -35,8 +38,8 @@ abstract class PaperDevGradlePlugin : Plugin<Project> {
         registerTasks(pluginYml, generatedResource)
     }
 
-    private fun Project.configurePluginYmlExtension() = extensions
-        .create<PaperPluginYml>("pluginYml")
+    private fun Project.configurePluginYmlExtension() = PaperPluginYml(this)
+        .also { extensions.add(PLUGIN_YML_EXTENSION, it) }
         .apply {
             name.convention(project.name)
             version.convention(project.version.toString())
@@ -64,5 +67,6 @@ abstract class PaperDevGradlePlugin : Plugin<Project> {
         const val PAPER_PLUGIN_YML_TASK_NAME = "paperPluginYml"
 
         private const val GENERATED_RESOURCES_DIR = "generated/paperDev/resources"
+        private const val PLUGIN_YML_EXTENSION = "pluginYml"
     }
 }
