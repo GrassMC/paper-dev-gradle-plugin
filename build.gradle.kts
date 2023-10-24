@@ -9,8 +9,8 @@ plugins {
     alias(libs.plugins.com.gradle.plugin.publish)
 }
 
-group = prop("group")
-version = prop("version")
+group = prop("group").get()
+version = prop("version").get()
 
 dependencies {
     implementation(platform(libs.jackson.bom))
