@@ -16,12 +16,8 @@
 
 package io.github.grassmc.paperdev.tasks
 
-import com.fasterxml.jackson.annotation.JsonInclude
-import com.fasterxml.jackson.databind.PropertyNamingStrategies
-import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator
-import com.fasterxml.jackson.dataformat.yaml.YAMLMapper
-import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import io.github.grassmc.paperdev.dsl.PaperPluginYml
+import io.github.grassmc.paperdev.utils.YamlSerializer
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.Property
@@ -40,19 +36,10 @@ abstract class PaperPluginYmlTask : DefaultTask() {
     fun generate() {
         val pluginYmlFile = outputDir.file(PAPER_PLUGIN_YML_FILENAME).get().asFile
 
-        createYamlMapper().writeValueAsString(pluginYml.get()).also {
+        YamlSerializer.serialize(pluginYml.get()).also {
             pluginYmlFile.writeText(it)
         }
     }
-
-    private fun createYamlMapper() = YAMLMapper
-        .builder()
-        .disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER)
-        .enable(YAMLGenerator.Feature.MINIMIZE_QUOTES)
-        .build()
-        .registerKotlinModule()
-        .setSerializationInclusion(JsonInclude.Include.NON_EMPTY)
-        .setPropertyNamingStrategy(PropertyNamingStrategies.KEBAB_CASE)
 
     companion object {
         private const val PAPER_PLUGIN_YML_FILENAME = "paper-plugin.yml"
