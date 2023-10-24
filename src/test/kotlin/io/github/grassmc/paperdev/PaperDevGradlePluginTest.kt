@@ -32,4 +32,11 @@ class PaperDevGradlePluginTest {
             assertTrue(plugins.hasPlugin("java"))
         }
     }
+
+    @Test
+    fun `paperPluginYml task should be registered`() {
+        withProject {
+            assertTrue(tasks.named(PaperDevGradlePlugin.PAPER_PLUGIN_YML_TASK_NAME).isPresent)
+        }
+    }
 }
