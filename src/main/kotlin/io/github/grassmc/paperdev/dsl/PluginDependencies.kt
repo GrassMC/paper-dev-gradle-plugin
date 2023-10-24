@@ -36,7 +36,7 @@ class PluginDependencies(project: Project) {
     fun server(action: NamedDomainObjectContainer<Dependency>.() -> Unit) = action(server)
 }
 
-data class Dependency(@JsonIgnore val name: String) {
+data class Dependency(@JsonIgnore @Input val name: String) {
     @Input
     @Optional
     var load: LoadOrder = LoadOrder.OMIT

@@ -41,7 +41,7 @@ interface PermissionContainer {
     fun permissions(action: NamedDomainObjectContainer<Permission>.() -> Unit) = action(permissions)
 }
 
-data class Permission(@JsonIgnore val name: String) {
+data class Permission(@JsonIgnore @Input val name: String) {
     @Input
     @Optional
     var description: String? = null
