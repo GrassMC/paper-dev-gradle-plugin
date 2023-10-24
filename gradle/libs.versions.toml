@@ -2,11 +2,13 @@
 kotlin = "1.9.10"
 plugin-publish = "1.2.1"
 jackson = "2.15.3"
+asm = "9.6"
 
 [libraries]
 jackson-bom = { group = "com.fasterxml.jackson", name = "jackson-bom", version.ref = "jackson" }
 jackson-module-kotlin = { group = "com.fasterxml.jackson.module", name = "jackson-module-kotlin" }
 jackson-dataformat-yaml = { module = "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml" }
+asm = { group = "org.ow2.asm", name = "asm", version.ref = "asm" }
 
 [plugins]
 com-gradle-plugin-publish = { id = "com.gradle.plugin-publish", version.ref = "plugin-publish" }

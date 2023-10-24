@@ -16,6 +16,7 @@ dependencies {
     implementation(platform(libs.jackson.bom))
     implementation(libs.jackson.module.kotlin)
     implementation(libs.jackson.dataformat.yaml)
+    implementation(libs.asm)
 }
 
 kotlin {
