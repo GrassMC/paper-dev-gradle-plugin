@@ -18,10 +18,18 @@ package io.github.grassmc.paperdev
 
 import org.junit.jupiter.api.assertDoesNotThrow
 import kotlin.test.Test
+import kotlin.test.assertTrue
 
 class PaperDevGradlePluginTest {
     @Test
     fun `plugin should be applied`() {
         assertDoesNotThrow { withProject { } }
+    }
+
+    @Test
+    fun `java plugin should be applied`() {
+        withProject {
+            assertTrue(plugins.hasPlugin("java"))
+        }
     }
 }
