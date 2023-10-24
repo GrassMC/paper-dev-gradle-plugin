@@ -18,6 +18,7 @@ package io.github.grassmc.paperdev
 
 import org.junit.jupiter.api.assertDoesNotThrow
 import kotlin.test.Test
+import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 class PaperDevGradlePluginTest {
@@ -37,6 +38,13 @@ class PaperDevGradlePluginTest {
     fun `paperPluginYml task should be registered`() {
         withProject {
             assertTrue(tasks.named(PaperDevGradlePlugin.PAPER_PLUGIN_YML_TASK_NAME).isPresent)
+        }
+    }
+
+    @Test
+    fun `pluginYml extension should be registered`() {
+        withProject {
+            assertNotNull(extensions.findByName("pluginYml"))
         }
     }
 }
