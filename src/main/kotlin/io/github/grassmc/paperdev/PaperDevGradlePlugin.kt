@@ -19,24 +19,29 @@ package io.github.grassmc.paperdev
 import io.github.grassmc.paperdev.tasks.PaperPluginYmlTask
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.file.Directory
 import org.gradle.api.plugins.JavaPlugin
+import org.gradle.api.provider.Provider
 import org.gradle.jvm.tasks.Jar
 import org.gradle.kotlin.dsl.apply
+import org.gradle.kotlin.dsl.assign
 import org.gradle.kotlin.dsl.register
 import org.gradle.kotlin.dsl.withType
-
 
 abstract class PaperDevGradlePlugin : Plugin<Project> {
     override fun apply(project: Project): Unit = with(project) {
         plugins.apply(JavaPlugin::class)
 
-        registerTasks()
+        val generatedResource = layout.buildDirectory.dir(GENERATED_RESOURCES_DIR)
+        registerTasks(generatedResource)
     }
 
-    private fun Project.registerTasks() {
+    private fun Project.registerTasks(generatedResource: Provider<Directory>) {
         val pluginYaml = tasks.register<PaperPluginYmlTask>(PAPER_PLUGIN_YML_TASK_NAME) {
             group = TASK_GROUP
             description = "Generates a paper-plugin.yml file for the project."
+
+            outputDir = generatedResource
         }
 
         tasks.withType<Jar> {
@@ -48,5 +53,7 @@ abstract class PaperDevGradlePlugin : Plugin<Project> {
     companion object {
         private const val TASK_GROUP = "paper development"
         const val PAPER_PLUGIN_YML_TASK_NAME = "paperPluginYml"
+
+        private const val GENERATED_RESOURCES_DIR = "generated/paperDev/resources"
     }
 }
