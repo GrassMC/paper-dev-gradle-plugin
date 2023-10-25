@@ -60,27 +60,8 @@ abstract class PaperDevGradlePlugin : Plugin<Project> {
             version.convention(project.version.toString())
             apiVersion.convention(PaperPluginYml.ApiVersion.Default)
             description.convention(project.description)
-
-            val namespacesProvider = namespacesProvider()
-            main.convention(namespacesProvider.flatMap {
-                provider { PluginNamespaceFinder.Type.MAIN.findFrom(it)?.name }
-            })
-            bootstrapper.convention(namespacesProvider.flatMap {
-                provider { PluginNamespaceFinder.Type.BOOTSTRAPPER.findFrom(it)?.name }
-            })
-            loader.convention(namespacesProvider.flatMap {
-                provider { PluginNamespaceFinder.Type.LOADER.findFrom(it)?.name }
-            })
         }
 
-    private fun Project.namespacesProvider() = provider {
-        tasks
-            .getByName<CollectPluginNamespacesTask>(COLLECT_PLUGIN_NAMESPACES_TASK_NAME)
-            .outputJsonFile
-            .get()
-            .asFile
-            .let { JsonMapper().registerKotlinModule().readValue<List<Namespace>>(it) }
-    }
 
     private fun Project.registerTasks() {
         val collectPluginNamespaces = tasks.register<CollectPluginNamespacesTask>(COLLECT_PLUGIN_NAMESPACES_TASK_NAME) {
@@ -89,6 +70,17 @@ abstract class PaperDevGradlePlugin : Plugin<Project> {
 
             classes.from(compiledClasses())
             outputJsonFile = paperDevFile("$name/namespaces.json")
+
+            doLast {
+                val jackson = JsonMapper().registerKotlinModule()
+                val namespaces = jackson.readValue<List<Namespace>>(outputJsonFile.get().asFile)
+
+                this@registerTasks.extensions.getByType<PaperPluginYml>().apply {
+                    main.convention(PluginNamespaceFinder.Type.MAIN.findFrom(namespaces)?.name)
+                    bootstrapper.convention(PluginNamespaceFinder.Type.BOOTSTRAPPER.findFrom(namespaces)?.name)
+                    loader.convention(PluginNamespaceFinder.Type.LOADER.findFrom(namespaces)?.name)
+                }
+            }
         }
 
         val pluginYaml = tasks.register<PaperPluginYmlTask>(PAPER_PLUGIN_YML_TASK_NAME) {
