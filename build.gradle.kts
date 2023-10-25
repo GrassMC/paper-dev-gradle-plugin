@@ -50,6 +50,8 @@ testing {
 }
 
 gradlePlugin {
+    website = prop("website")
+    vcsUrl = prop("vcsUrl")
     testSourceSets.add(sourceSets["functionalTest"])
 
     val paperDev by plugins.creating {
