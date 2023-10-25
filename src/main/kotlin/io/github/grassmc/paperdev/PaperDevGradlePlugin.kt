@@ -63,10 +63,12 @@ abstract class PaperDevGradlePlugin : Plugin<Project> {
     }
 
     companion object {
-        private const val TASK_GROUP = "paper development"
-        const val PAPER_PLUGIN_YML_TASK_NAME = "paperPluginYml"
-
-        private const val GENERATED_RESOURCES_DIR = "generated/paperDev/resources"
         private const val PLUGIN_YML_EXTENSION = "pluginYml"
+
+        private const val TASK_GROUP = "paper development"
+        const  val PAPER_PLUGIN_YML_TASK_NAME = "paperPluginYml"
+
+        const val PAPER_DEV_DIR = "paperDev"
+        const val GENERATED_RESOURCES_DIR = "$PAPER_DEV_DIR/resources"
     }
 }
