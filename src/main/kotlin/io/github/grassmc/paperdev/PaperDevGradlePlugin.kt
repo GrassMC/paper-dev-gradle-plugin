@@ -61,6 +61,8 @@ abstract class PaperDevGradlePlugin : Plugin<Project> {
 
             pluginYml = provider { this@registerTasks.extensions.findByType<PaperPluginYml>() }
             outputDir = paperDevDir(name)
+
+            dependsOn(collectPluginNamespaces)
         }
 
         tasks.withType<Jar> {
