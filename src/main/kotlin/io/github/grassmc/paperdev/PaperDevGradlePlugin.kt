@@ -59,7 +59,7 @@ abstract class PaperDevGradlePlugin : Plugin<Project> {
             group = TASK_GROUP
             description = "Generates a paper-plugin.yml file for the project."
 
-            pluginYml = provider { extensions.findByType<PaperPluginYml>() }
+            pluginYml = provider { this@registerTasks.extensions.findByType<PaperPluginYml>() }
             outputDir = paperDevDir(name)
         }
 
