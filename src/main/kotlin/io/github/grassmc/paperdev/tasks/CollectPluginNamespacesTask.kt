@@ -16,10 +16,12 @@
 
 package io.github.grassmc.paperdev.tasks
 
+import com.fasterxml.jackson.databind.json.JsonMapper
+import com.fasterxml.jackson.module.kotlin.registerKotlinModule
+import io.github.grassmc.paperdev.namespace.Namespace
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.RegularFileProperty
-import org.gradle.api.provider.ListProperty
 import org.gradle.api.tasks.*
 import org.gradle.work.InputChanges
 import org.objectweb.asm.ClassReader
@@ -27,14 +29,11 @@ import java.io.File
 
 @CacheableTask
 abstract class CollectPluginNamespacesTask : DefaultTask() {
-    @get:Input
-    abstract val inheritedClassNames: ListProperty<String>
-
     @get:[InputFiles SkipWhenEmpty PathSensitive(PathSensitivity.RELATIVE)]
     abstract val classes: ConfigurableFileCollection
 
     @get:OutputFile
-    abstract val outputFile: RegularFileProperty
+    abstract val outputJsonFile: RegularFileProperty
 
     @TaskAction
     fun collect(changes: InputChanges) {
@@ -42,19 +41,20 @@ abstract class CollectPluginNamespacesTask : DefaultTask() {
             .getFileChanges(classes)
             .asSequence()
             .map { it.file }
-            .filter { it.exists() && it.isFile && it.extension == "class" }
-            .mapNotNull { it.classReader().filterInherited() }
+            .filter { it.isClassFile }
+            .map { it.classReader().readNamespace() }
             .distinct()
-            .joinToString("\n") { (className, inheritedClassName) ->
-                "$className->$inheritedClassName"
-            }
-            .let { outputFile.get().asFile.writeText(it) }
+            .let { JsonMapper().registerKotlinModule().writeValueAsString(it) }
+            .also { outputJsonFile.get().asFile.writeText(it) }
     }
 
-    private fun ClassReader.filterInherited() = listOf(superName, *interfaces)
-        .map { it.namespace() }
-        .firstOrNull { it in inheritedClassNames.get() }
-        ?.let { className.namespace() to it }
+    private val File.isClassFile get() = exists() && isFile && extension == "class"
+
+    private fun ClassReader.readNamespace() = Namespace(
+        className.namespace(),
+        superName.namespace(),
+        interfaces.map { it.namespace() },
+    )
 
     private fun File.classReader() = inputStream().use { ClassReader(it) }
 

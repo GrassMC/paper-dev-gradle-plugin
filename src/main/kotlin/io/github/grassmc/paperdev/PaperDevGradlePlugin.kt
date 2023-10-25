@@ -51,11 +51,10 @@ abstract class PaperDevGradlePlugin : Plugin<Project> {
     private fun Project.registerTasks(generatedResource: Provider<Directory>) {
         val collectPluginNamespaces = tasks.register<CollectPluginNamespacesTask>(COLLECT_PLUGIN_NAMESPACES_TASK_NAME) {
             group = TASK_GROUP
-            description = "Collects the namespaces of all classes that inherit from a Paper API class."
+            description = "Collects the namespaces and it parents of all compiled classes."
 
-            inheritedClassNames = defaultInheritedClassNames
             classes.from(compiledClasses())
-            outputFile = layout.buildDirectory.file("$PAPER_DEV_DIR/$name/namespaces.txt")
+            outputJsonFile = layout.buildDirectory.file("$PAPER_DEV_DIR/$name/namespaces.json")
         }
 
         val pluginYaml = tasks.register<PaperPluginYmlTask>(PAPER_PLUGIN_YML_TASK_NAME) {
@@ -87,11 +86,5 @@ abstract class PaperDevGradlePlugin : Plugin<Project> {
 
         const val PAPER_DEV_DIR = "paperDev"
         const val GENERATED_RESOURCES_DIR = "$PAPER_DEV_DIR/resources"
-
-        private val defaultInheritedClassNames = listOf(
-            "org.bukkit.plugin.java.JavaPlugin",
-            "io.papermc.paper.plugin.bootstrap.PluginBootstrap",
-            "io.papermc.paper.plugin.loader.PluginLoader",
-        )
     }
 }
