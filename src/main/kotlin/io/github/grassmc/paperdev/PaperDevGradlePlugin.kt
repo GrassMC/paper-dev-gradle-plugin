@@ -19,7 +19,9 @@ package io.github.grassmc.paperdev
 import com.fasterxml.jackson.databind.json.JsonMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
+import io.github.grassmc.paperdev.dsl.PaperDevExtension
 import io.github.grassmc.paperdev.dsl.PaperPluginYml
+import io.github.grassmc.paperdev.dsl.PaperVersions
 import io.github.grassmc.paperdev.namespace.Namespace
 import io.github.grassmc.paperdev.namespace.PluginNamespaceFinder
 import io.github.grassmc.paperdev.tasks.CollectPluginNamespacesTask
@@ -40,6 +42,7 @@ abstract class PaperDevGradlePlugin : Plugin<Project> {
         configurations.maybeCreate(PAPER_LIBS_CONFIGURATION_NAME)
 
         configurePaperRepository()
+        registerPaperDevExtension()
         registerPluginYmlExtension()
         afterEvaluate {
             registerTasks()
@@ -50,6 +53,19 @@ abstract class PaperDevGradlePlugin : Plugin<Project> {
         maven {
             name = "PaperMC Public Repository"
             url = uri("https://repo.papermc.io/repository/maven-public/")
+        }
+    }
+
+    private fun Project.registerPaperDevExtension() {
+        val paperDev = extensions.create<PaperDevExtension>("paperDev").apply {
+            version.convention(PaperVersions.Latest)
+        }
+
+        afterEvaluate {
+            dependencies.add(
+                JavaPlugin.COMPILE_ONLY_CONFIGURATION_NAME,
+                paperDev.version.map { it.toDependencyNotation() }
+            )
         }
     }
 
