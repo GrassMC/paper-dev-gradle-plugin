@@ -32,7 +32,9 @@ abstract class PaperDevGradlePlugin : Plugin<Project> {
         plugins.apply(JavaPlugin::class)
 
         registerPluginYmlExtension()
-        registerTasks()
+        afterEvaluate {
+            registerTasks()
+        }
     }
 
     private fun Project.registerPluginYmlExtension() = PaperPluginYml(this)
