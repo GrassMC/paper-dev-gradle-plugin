@@ -24,10 +24,7 @@ import org.gradle.api.file.Directory
 import org.gradle.api.plugins.JavaPlugin
 import org.gradle.api.provider.Provider
 import org.gradle.jvm.tasks.Jar
-import org.gradle.kotlin.dsl.apply
-import org.gradle.kotlin.dsl.assign
-import org.gradle.kotlin.dsl.register
-import org.gradle.kotlin.dsl.withType
+import org.gradle.kotlin.dsl.*
 
 abstract class PaperDevGradlePlugin : Plugin<Project> {
     override fun apply(project: Project): Unit = with(project) {
@@ -35,7 +32,7 @@ abstract class PaperDevGradlePlugin : Plugin<Project> {
 
         val pluginYml = configurePluginYmlExtension()
         val generatedResource = layout.buildDirectory.dir(GENERATED_RESOURCES_DIR)
-        registerTasks(pluginYml, generatedResource)
+        registerTasks(generatedResource)
     }
 
     private fun Project.configurePluginYmlExtension() = PaperPluginYml(this)
@@ -47,12 +44,12 @@ abstract class PaperDevGradlePlugin : Plugin<Project> {
             description.convention(project.description)
         }
 
-    private fun Project.registerTasks(paperPluginYml: PaperPluginYml, generatedResource: Provider<Directory>) {
+    private fun Project.registerTasks(generatedResource: Provider<Directory>) {
         val pluginYaml = tasks.register<PaperPluginYmlTask>(PAPER_PLUGIN_YML_TASK_NAME) {
             group = TASK_GROUP
             description = "Generates a paper-plugin.yml file for the project."
 
-            pluginYml = paperPluginYml
+            pluginYml = provider { extensions.findByType<PaperPluginYml>() }
             outputDir = generatedResource
         }
 
@@ -66,7 +63,7 @@ abstract class PaperDevGradlePlugin : Plugin<Project> {
         private const val PLUGIN_YML_EXTENSION = "pluginYml"
 
         private const val TASK_GROUP = "paper development"
-        const  val PAPER_PLUGIN_YML_TASK_NAME = "paperPluginYml"
+        const val PAPER_PLUGIN_YML_TASK_NAME = "paperPluginYml"
 
         const val PAPER_DEV_DIR = "paperDev"
         const val GENERATED_RESOURCES_DIR = "$PAPER_DEV_DIR/resources"
