@@ -21,9 +21,7 @@ import io.github.grassmc.paperdev.tasks.CollectPluginNamespacesTask
 import io.github.grassmc.paperdev.tasks.PaperPluginYmlTask
 import org.gradle.api.Plugin
 import org.gradle.api.Project
-import org.gradle.api.file.Directory
 import org.gradle.api.plugins.JavaPlugin
-import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.SourceSetContainer
 import org.gradle.jvm.tasks.Jar
@@ -34,9 +32,7 @@ abstract class PaperDevGradlePlugin : Plugin<Project> {
         plugins.apply(JavaPlugin::class)
 
         registerPluginYmlExtension()
-
-        val generatedResource = layout.buildDirectory.dir(GENERATED_RESOURCES_DIR)
-        registerTasks(generatedResource)
+        registerTasks()
     }
 
     private fun Project.registerPluginYmlExtension() = PaperPluginYml(this)
@@ -48,7 +44,7 @@ abstract class PaperDevGradlePlugin : Plugin<Project> {
             description.convention(project.description)
         }
 
-    private fun Project.registerTasks(generatedResource: Provider<Directory>) {
+    private fun Project.registerTasks() {
         val collectPluginNamespaces = tasks.register<CollectPluginNamespacesTask>(COLLECT_PLUGIN_NAMESPACES_TASK_NAME) {
             group = TASK_GROUP
             description = "Collects the namespaces and it parents of all compiled classes."
@@ -62,7 +58,7 @@ abstract class PaperDevGradlePlugin : Plugin<Project> {
             description = "Generates a paper-plugin.yml file for the project."
 
             pluginYml = provider { extensions.findByType<PaperPluginYml>() }
-            outputDir = generatedResource
+            outputDir = paperDevDir(name)
         }
 
         tasks.withType<Jar> {
@@ -79,6 +75,8 @@ abstract class PaperDevGradlePlugin : Plugin<Project> {
 
     private fun Project.paperDevFile(path: String) = layout.buildDirectory.file("$PAPER_DEV_DIR/$path")
 
+    private fun Project.paperDevDir(path: String) = layout.buildDirectory.dir("$PAPER_DEV_DIR/$path")
+
     companion object {
         private const val PLUGIN_YML_EXTENSION = "pluginYml"
 
@@ -87,6 +85,5 @@ abstract class PaperDevGradlePlugin : Plugin<Project> {
         const val COLLECT_PLUGIN_NAMESPACES_TASK_NAME = "collectPluginNamespaces"
 
         const val PAPER_DEV_DIR = "paperDev"
-        const val GENERATED_RESOURCES_DIR = "$PAPER_DEV_DIR/resources"
     }
 }
