@@ -54,7 +54,7 @@ abstract class PaperDevGradlePlugin : Plugin<Project> {
             description = "Collects the namespaces and it parents of all compiled classes."
 
             classes.from(compiledClasses())
-            outputJsonFile = layout.buildDirectory.file("$PAPER_DEV_DIR/$name/namespaces.json")
+            outputJsonFile = paperDevFile("$name/namespaces.json")
         }
 
         val pluginYaml = tasks.register<PaperPluginYmlTask>(PAPER_PLUGIN_YML_TASK_NAME) {
@@ -76,6 +76,8 @@ abstract class PaperDevGradlePlugin : Plugin<Project> {
         .getByName(SourceSet.MAIN_SOURCE_SET_NAME)
         .output
         .classesDirs
+
+    private fun Project.paperDevFile(path: String) = layout.buildDirectory.file("$PAPER_DEV_DIR/$path")
 
     companion object {
         private const val PLUGIN_YML_EXTENSION = "pluginYml"
