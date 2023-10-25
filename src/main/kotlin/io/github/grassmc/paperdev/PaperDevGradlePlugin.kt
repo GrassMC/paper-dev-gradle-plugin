@@ -16,7 +16,12 @@
 
 package io.github.grassmc.paperdev
 
+import com.fasterxml.jackson.databind.json.JsonMapper
+import com.fasterxml.jackson.module.kotlin.readValue
+import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import io.github.grassmc.paperdev.dsl.PaperPluginYml
+import io.github.grassmc.paperdev.namespace.Namespace
+import io.github.grassmc.paperdev.namespace.PluginNamespaceParser
 import io.github.grassmc.paperdev.tasks.CollectPluginNamespacesTask
 import io.github.grassmc.paperdev.tasks.PaperPluginYmlTask
 import org.gradle.api.Plugin
@@ -44,7 +49,27 @@ abstract class PaperDevGradlePlugin : Plugin<Project> {
             version.convention(project.version.toString())
             apiVersion.convention(PaperPluginYml.ApiVersion.Default)
             description.convention(project.description)
+
+            val namespacesProvider = namespacesProvider()
+            main.convention(namespacesProvider.flatMap {
+                provider { PluginNamespaceParser.Type.MAIN.parse(it)?.name }
+            })
+            bootstrapper.convention(namespacesProvider.flatMap {
+                provider { PluginNamespaceParser.Type.BOOTSTRAPPER.parse(it)?.name }
+            })
+            loader.convention(namespacesProvider.flatMap {
+                provider { PluginNamespaceParser.Type.LOADER.parse(it)?.name }
+            })
         }
+
+    private fun Project.namespacesProvider() = provider {
+        tasks
+            .getByName<CollectPluginNamespacesTask>(COLLECT_PLUGIN_NAMESPACES_TASK_NAME)
+            .outputJsonFile
+            .get()
+            .asFile
+            .let { JsonMapper().registerKotlinModule().readValue<List<Namespace>>(it) }
+    }
 
     private fun Project.registerTasks() {
         val collectPluginNamespaces = tasks.register<CollectPluginNamespacesTask>(COLLECT_PLUGIN_NAMESPACES_TASK_NAME) {
