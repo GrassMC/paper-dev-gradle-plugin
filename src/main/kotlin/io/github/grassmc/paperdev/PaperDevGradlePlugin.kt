@@ -28,6 +28,7 @@ import io.github.grassmc.paperdev.tasks.PaperPluginYmlTask
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.plugins.JavaPlugin
+import org.gradle.api.tasks.Copy
 import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.SourceSetContainer
 import org.gradle.jvm.tasks.Jar
@@ -102,10 +103,29 @@ abstract class PaperDevGradlePlugin : Plugin<Project> {
             paperLibrariesJson = paperDevFile("$name/paper-libraries.json")
         }
 
+        val paperLibClassLoader = tasks.register<Copy>("paperLibsClassLoader") {
+            group = TASK_GROUP
+            description = "Copies the paper libraries loader to the build directory."
+
+            val pluginJar = PaperDevGradlePlugin::class.java.protectionDomain.codeSource.location
+            from(zipTree(pluginJar)) {
+                include(PAPER_LIBS_LOADER_TEMPLATE_FILENAME)
+                expand("package" to DEFAULT_CLASS_PACKAGE)
+                into(DEFAULT_CLASS_PACKAGE.replace('.', '/'))
+            }
+            into(paperDevFile(name))
+        }
+
         tasks.withType<Jar> {
             dependsOn(pluginYaml, paperLibrariesJson)
             from(pluginYaml.map { it.outputDir })
             from(paperLibrariesJson.map { it.paperLibrariesJson })
+        }
+
+        plugins.withType<JavaPlugin> {
+            extensions.getByType<SourceSetContainer>().named(SourceSet.MAIN_SOURCE_SET_NAME) {
+                java.srcDirs(paperLibClassLoader.map { it.destinationDir })
+            }
         }
     }
 
@@ -129,5 +149,8 @@ abstract class PaperDevGradlePlugin : Plugin<Project> {
         const val COLLECT_PLUGIN_NAMESPACES_TASK_NAME = "collectPluginNamespaces"
 
         const val PAPER_DEV_DIR = "paperDev"
+        private const val PAPER_LIBS_LOADER_TEMPLATE_FILENAME = "PaperLibsLoader.java"
+
+        const val DEFAULT_CLASS_PACKAGE = "io.github.grassmc.paperdev.loader"
     }
 }
