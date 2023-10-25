@@ -30,12 +30,13 @@ abstract class PaperDevGradlePlugin : Plugin<Project> {
     override fun apply(project: Project): Unit = with(project) {
         plugins.apply(JavaPlugin::class)
 
-        val pluginYml = configurePluginYmlExtension()
+        registerPluginYmlExtension()
+
         val generatedResource = layout.buildDirectory.dir(GENERATED_RESOURCES_DIR)
         registerTasks(generatedResource)
     }
 
-    private fun Project.configurePluginYmlExtension() = PaperPluginYml(this)
+    private fun Project.registerPluginYmlExtension() = PaperPluginYml(this)
         .also { extensions.add(PLUGIN_YML_EXTENSION, it) }
         .apply {
             name.convention(project.name)
