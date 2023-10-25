@@ -6,6 +6,7 @@ fun Project.prop(propName: String) = providers.gradleProperty(propName)
 
 plugins {
     `kotlin-dsl`
+    signing
     alias(libs.plugins.com.gradle.plugin.publish)
 }
 
