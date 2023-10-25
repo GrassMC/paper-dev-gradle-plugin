@@ -17,12 +17,15 @@
 package io.github.grassmc.paperdev
 
 import io.github.grassmc.paperdev.dsl.PaperPluginYml
+import io.github.grassmc.paperdev.tasks.CollectPluginNamespacesTask
 import io.github.grassmc.paperdev.tasks.PaperPluginYmlTask
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.file.Directory
 import org.gradle.api.plugins.JavaPlugin
 import org.gradle.api.provider.Provider
+import org.gradle.api.tasks.SourceSet
+import org.gradle.api.tasks.SourceSetContainer
 import org.gradle.jvm.tasks.Jar
 import org.gradle.kotlin.dsl.*
 
@@ -46,6 +49,15 @@ abstract class PaperDevGradlePlugin : Plugin<Project> {
         }
 
     private fun Project.registerTasks(generatedResource: Provider<Directory>) {
+        val collectPluginNamespaces = tasks.register<CollectPluginNamespacesTask>(COLLECT_PLUGIN_NAMESPACES_TASK_NAME) {
+            group = TASK_GROUP
+            description = "Collects the namespaces of all classes that inherit from a Paper API class."
+
+            inheritedClassNames = defaultInheritedClassNames
+            classes.from(compiledClasses())
+            outputFile = layout.buildDirectory.file("$PAPER_DEV_DIR/$name/namespaces.txt")
+        }
+
         val pluginYaml = tasks.register<PaperPluginYmlTask>(PAPER_PLUGIN_YML_TASK_NAME) {
             group = TASK_GROUP
             description = "Generates a paper-plugin.yml file for the project."
@@ -60,13 +72,26 @@ abstract class PaperDevGradlePlugin : Plugin<Project> {
         }
     }
 
+    private fun Project.compiledClasses() = extensions
+        .getByType<SourceSetContainer>()
+        .getByName(SourceSet.MAIN_SOURCE_SET_NAME)
+        .output
+        .classesDirs
+
     companion object {
         private const val PLUGIN_YML_EXTENSION = "pluginYml"
 
         private const val TASK_GROUP = "paper development"
         const val PAPER_PLUGIN_YML_TASK_NAME = "paperPluginYml"
+        const val COLLECT_PLUGIN_NAMESPACES_TASK_NAME = "collectPluginNamespaces"
 
         const val PAPER_DEV_DIR = "paperDev"
         const val GENERATED_RESOURCES_DIR = "$PAPER_DEV_DIR/resources"
+
+        private val defaultInheritedClassNames = listOf(
+            "org.bukkit.plugin.java.JavaPlugin",
+            "io.papermc.paper.plugin.bootstrap.PluginBootstrap",
+            "io.papermc.paper.plugin.loader.PluginLoader",
+        )
     }
 }
