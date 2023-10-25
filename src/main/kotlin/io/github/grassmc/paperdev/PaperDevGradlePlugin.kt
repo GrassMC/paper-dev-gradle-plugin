@@ -39,9 +39,17 @@ abstract class PaperDevGradlePlugin : Plugin<Project> {
         plugins.apply(JavaPlugin::class)
         configurations.maybeCreate(PAPER_LIBS_CONFIGURATION_NAME)
 
+        configurePaperRepository()
         registerPluginYmlExtension()
         afterEvaluate {
             registerTasks()
+        }
+    }
+
+    private fun Project.configurePaperRepository() = repositories {
+        maven {
+            name = "PaperMC Public Repository"
+            url = uri("https://repo.papermc.io/repository/maven-public/")
         }
     }
 
