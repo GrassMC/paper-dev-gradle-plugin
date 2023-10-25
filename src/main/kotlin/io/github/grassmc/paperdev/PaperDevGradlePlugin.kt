@@ -21,7 +21,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import io.github.grassmc.paperdev.dsl.PaperPluginYml
 import io.github.grassmc.paperdev.namespace.Namespace
-import io.github.grassmc.paperdev.namespace.PluginNamespaceParser
+import io.github.grassmc.paperdev.namespace.PluginNamespaceFinder
 import io.github.grassmc.paperdev.tasks.CollectPluginNamespacesTask
 import io.github.grassmc.paperdev.tasks.PaperPluginYmlTask
 import org.gradle.api.Plugin
@@ -52,13 +52,13 @@ abstract class PaperDevGradlePlugin : Plugin<Project> {
 
             val namespacesProvider = namespacesProvider()
             main.convention(namespacesProvider.flatMap {
-                provider { PluginNamespaceParser.Type.MAIN.parse(it)?.name }
+                provider { PluginNamespaceFinder.Type.MAIN.findFrom(it)?.name }
             })
             bootstrapper.convention(namespacesProvider.flatMap {
-                provider { PluginNamespaceParser.Type.BOOTSTRAPPER.parse(it)?.name }
+                provider { PluginNamespaceFinder.Type.BOOTSTRAPPER.findFrom(it)?.name }
             })
             loader.convention(namespacesProvider.flatMap {
-                provider { PluginNamespaceParser.Type.LOADER.parse(it)?.name }
+                provider { PluginNamespaceFinder.Type.LOADER.findFrom(it)?.name }
             })
         }
 

@@ -16,15 +16,15 @@
 
 package io.github.grassmc.paperdev.namespace
 
-interface PluginNamespaceParser {
-    fun parse(namespaces: Iterable<Namespace>): Namespace?
+interface PluginNamespaceFinder {
+    fun findFrom(namespaces: Iterable<Namespace>): Namespace?
 
-    enum class Type(private vararg val parents: String) : PluginNamespaceParser {
+    enum class Type(private vararg val parents: String) : PluginNamespaceFinder {
         MAIN("org.bukkit.plugin.java.JavaPlugin"),
         BOOTSTRAPPER("io.papermc.paper.plugin.bootstrap.PluginBootstrap"),
         LOADER("io.papermc.paper.plugin.loader.PluginLoader");
 
-        override fun parse(namespaces: Iterable<Namespace>) = namespaces.firstOrNull { namespace ->
+        override fun findFrom(namespaces: Iterable<Namespace>) = namespaces.firstOrNull { namespace ->
             namespace.superName in parents || namespace.interfaces.any { it in parents }
         }
     }
