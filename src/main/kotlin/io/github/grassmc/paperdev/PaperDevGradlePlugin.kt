@@ -23,6 +23,7 @@ import io.github.grassmc.paperdev.dsl.PaperPluginYml
 import io.github.grassmc.paperdev.namespace.Namespace
 import io.github.grassmc.paperdev.namespace.PluginNamespaceFinder
 import io.github.grassmc.paperdev.tasks.CollectPluginNamespacesTask
+import io.github.grassmc.paperdev.tasks.PaperLibrariesJsonTask
 import io.github.grassmc.paperdev.tasks.PaperPluginYmlTask
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -35,6 +36,7 @@ import org.gradle.kotlin.dsl.*
 abstract class PaperDevGradlePlugin : Plugin<Project> {
     override fun apply(project: Project): Unit = with(project) {
         plugins.apply(JavaPlugin::class)
+        configurations.maybeCreate(PAPER_LIBS_CONFIGURATION_NAME)
 
         registerPluginYmlExtension()
         afterEvaluate {
@@ -90,9 +92,20 @@ abstract class PaperDevGradlePlugin : Plugin<Project> {
             dependsOn(collectPluginNamespaces)
         }
 
+        val paperLibrariesJson = tasks.register<PaperLibrariesJsonTask>("paperLibrariesJson") {
+            group = TASK_GROUP
+            description = "Generates a json file contains repositories and dependencies in the project."
+
+            librariesRootComponent = configurations
+                .named(PAPER_LIBS_CONFIGURATION_NAME)
+                .map { it.incoming.resolutionResult.root }
+            paperLibrariesJson = paperDevFile("$name/paper-libraries.json")
+        }
+
         tasks.withType<Jar> {
-            dependsOn(pluginYaml)
+            dependsOn(pluginYaml, paperLibrariesJson)
             from(pluginYaml.map { it.outputDir })
+            from(paperLibrariesJson.map { it.paperLibrariesJson })
         }
     }
 
@@ -108,6 +121,8 @@ abstract class PaperDevGradlePlugin : Plugin<Project> {
 
     companion object {
         private const val PLUGIN_YML_EXTENSION = "pluginYml"
+
+        const val PAPER_LIBS_CONFIGURATION_NAME = "paperLibs"
 
         private const val TASK_GROUP = "paper development"
         const val PAPER_PLUGIN_YML_TASK_NAME = "paperPluginYml"
