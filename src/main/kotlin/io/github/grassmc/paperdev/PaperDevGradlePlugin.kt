@@ -75,7 +75,7 @@ abstract class PaperDevGradlePlugin : Plugin<Project> {
         .also { extensions.add(PLUGIN_YML_EXTENSION, it) }
         .apply {
             name.convention(project.name)
-            version.convention(project.version.toString())
+            version.convention(provider { project.version.toString() })
             apiVersion.convention(PaperPluginYml.ApiVersion.Default)
             description.convention(project.description)
         }
