@@ -1,0 +1,23 @@
+name: Gradle Publish
+on:
+  workflow_run:
+    workflows: [ Gradle Build ]
+    types: [ completed ]
+    branches: [ main ]
+
+jobs:
+  check-release:
+    name: Check for release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Release Please Action
+        id: release
+        uses: google-github-actions/release-please-action@v3
+        with:
+          release-type: java
+          extra-files: |
+            gradle.properties
