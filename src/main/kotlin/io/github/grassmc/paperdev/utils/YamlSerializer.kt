@@ -41,7 +41,6 @@ object YamlSerializer {
     private fun createMapper() = YAMLMapper
         .builder()
         .disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER)
-        .enable(YAMLGenerator.Feature.MINIMIZE_QUOTES)
         .enable(YAMLGenerator.Feature.INDENT_ARRAYS_WITH_INDICATOR)
         .build()
         .registerKotlinModule()
