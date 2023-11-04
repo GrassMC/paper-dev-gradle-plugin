@@ -24,6 +24,9 @@ jobs:
         os: [ ubuntu-latest, windows-latest ]
 
     runs-on: ${{ matrix.os }}
+    permissions:
+      pull-requests: write
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
