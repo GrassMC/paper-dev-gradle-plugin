@@ -20,7 +20,7 @@ interface PluginNamespaceFinder {
     fun findFrom(namespaces: Iterable<Namespace>): Namespace?
 
     enum class Type(private vararg val parents: String) : PluginNamespaceFinder {
-        MAIN("org.bukkit.plugin.java.JavaPlugin"),
+        MAIN("org.bukkit.plugin.Plugin", "org.bukkit.plugin.java.JavaPlugin"),
         BOOTSTRAPPER("io.papermc.paper.plugin.bootstrap.PluginBootstrap"),
         LOADER("io.papermc.paper.plugin.loader.PluginLoader");
 
