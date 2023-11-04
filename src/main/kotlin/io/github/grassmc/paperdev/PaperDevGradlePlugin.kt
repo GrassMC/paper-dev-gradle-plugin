@@ -39,7 +39,9 @@ import org.gradle.kotlin.dsl.*
 abstract class PaperDevGradlePlugin : Plugin<Project> {
     override fun apply(project: Project): Unit = with(project) {
         plugins.apply(JavaPlugin::class)
-        configurations.maybeCreate(PAPER_LIBS_CONFIGURATION_NAME)
+        configurations.maybeCreate(PAPER_LIBS_CONFIGURATION_NAME).also {
+            configurations.getByName(JavaPlugin.IMPLEMENTATION_CONFIGURATION_NAME).extendsFrom(it)
+        }
 
         configurePaperRepository()
         registerPaperDevExtension()
@@ -73,7 +75,7 @@ abstract class PaperDevGradlePlugin : Plugin<Project> {
         .also { extensions.add(PLUGIN_YML_EXTENSION, it) }
         .apply {
             name.convention(project.name)
-            version.convention(project.version.toString())
+            version.convention(provider { project.version.toString() })
             apiVersion.convention(PaperPluginYml.ApiVersion.Default)
             description.convention(project.description)
         }
