@@ -88,10 +88,17 @@ abstract class PaperDevGradlePlugin : Plugin<Project> {
 
             classes.from(compiledClasses())
             outputJsonFile = paperDevFile("$name/namespaces.json")
+        }
 
-            doLast {
+        val detectPluginNamespaces = tasks.register(DETECT_PLUGIN_NAMESPACES_TASK_NAME) {
+            group = TASK_GROUP
+            description = "Detects plugin namespaces and set conventions for pluginYml namespaces."
+
+            dependsOn(collectPluginNamespaces)
+            doFirst {
                 val jackson = JsonMapper().registerKotlinModule()
-                val namespaces = jackson.readValue<List<Namespace>>(outputJsonFile.get().asFile)
+                val namespacesJson = collectPluginNamespaces.get().outputJsonFile.get().asFile
+                val namespaces = jackson.readValue<List<Namespace>>(namespacesJson)
 
                 this@registerTasks.extensions.getByType<PaperPluginYml>().apply {
                     main.convention(PluginNamespaceFinder.Type.MAIN.findFrom(namespaces)?.name)
@@ -108,7 +115,7 @@ abstract class PaperDevGradlePlugin : Plugin<Project> {
             pluginYml = provider { this@registerTasks.extensions.findByType<PaperPluginYml>() }
             outputDir = paperDevDir(name)
 
-            dependsOn(collectPluginNamespaces)
+            dependsOn(detectPluginNamespaces)
         }
 
         val paperLibrariesJson = tasks.register<PaperLibrariesJsonTask>("paperLibrariesJson") {
@@ -164,6 +171,7 @@ abstract class PaperDevGradlePlugin : Plugin<Project> {
 
         private const val TASK_GROUP = "paper development"
         const val PAPER_PLUGIN_YML_TASK_NAME = "paperPluginYml"
+        const val DETECT_PLUGIN_NAMESPACES_TASK_NAME = "detectPluginNamespaces"
         const val COLLECT_PLUGIN_NAMESPACES_TASK_NAME = "collectPluginNamespaces"
 
         const val PAPER_DEV_DIR = "paperDev"
