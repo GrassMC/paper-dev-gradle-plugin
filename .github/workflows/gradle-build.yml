@@ -17,7 +17,7 @@ jobs:
         uses: gradle/wrapper-validation-action@v1
 
   build:
-    name: Build
+    name: Build and analyze
     needs: validate-wrapper
     strategy:
       matrix:
@@ -52,12 +52,22 @@ jobs:
             caches/build-cache-1
             caches/keyrings
 
+      - name: Cache SonarCloud packages
+        uses: actions/cache@v3
+        with:
+          path: ~/.sonar/cache
+          key: ${{ runner.os }}-sonar
+          restore-keys: ${{ runner.os }}-sonar
+
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
       - name: Build with Gradle Build Scan
         id: build
-        run: ./gradlew build --scan
+        run: ./gradlew build sonar --scan
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
       - name: Add Build Scan URL as PR comment
         uses: actions/github-script@v6
