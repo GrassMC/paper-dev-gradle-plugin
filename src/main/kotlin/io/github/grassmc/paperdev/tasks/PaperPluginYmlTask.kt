@@ -21,10 +21,12 @@ import io.github.grassmc.paperdev.utils.YamlSerializer
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.Property
+import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
 
+@CacheableTask
 abstract class PaperPluginYmlTask : DefaultTask() {
     @get:Nested
     abstract val pluginYml: Property<PaperPluginYml>
