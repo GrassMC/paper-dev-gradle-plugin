@@ -8,6 +8,7 @@ plugins {
     `kotlin-dsl`
     signing
     alias(libs.plugins.com.gradle.plugin.publish)
+    alias(libs.plugins.org.sonarqube)
 }
 
 group = prop("group").get()

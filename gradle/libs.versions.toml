@@ -1,6 +1,7 @@
 [versions]
 kotlin = "1.9.10"
 plugin-publish = "1.2.1"
+sonarqube = "4.4.1.3373"
 jackson = "2.15.3"
 asm = "9.6"
 
@@ -12,3 +13,4 @@ asm = { group = "org.ow2.asm", name = "asm", version.ref = "asm" }
 
 [plugins]
 com-gradle-plugin-publish = { id = "com.gradle.plugin-publish", version.ref = "plugin-publish" }
+org-sonarqube = { id = "org.sonarqube", version.ref = "sonarqube" }
