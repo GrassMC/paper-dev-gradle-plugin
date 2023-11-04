@@ -49,6 +49,9 @@ jobs:
             caches/build-cache-1
             caches/keyrings
 
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
       - name: Build with Gradle Build Scan
         id: build
         run: ./gradlew build --scan
