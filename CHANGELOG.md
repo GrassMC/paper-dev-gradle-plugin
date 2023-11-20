@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1](https://github.com/GrassMC/paper-dev-gradle-plugin/compare/v0.2.0...v0.2.1) (2023-11-20)
+
+
+### Bug Fixes
+
+* **deps:** update dependency com.fasterxml.jackson:jackson-bom to v2.16.0 ([#31](https://github.com/GrassMC/paper-dev-gradle-plugin/issues/31)) ([79e14e8](https://github.com/GrassMC/paper-dev-gradle-plugin/commit/79e14e8274c5c226dc29565e168e602b037b995f))
+
 ## [0.2.0](https://github.com/GrassMC/paper-dev-gradle-plugin/compare/v0.1.1...v0.2.0) (2023-11-04)
 
 
