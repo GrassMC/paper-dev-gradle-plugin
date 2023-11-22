@@ -23,6 +23,7 @@ import io.github.grassmc.paperdev.dsl.PaperDevExtension
 import io.github.grassmc.paperdev.dsl.PaperPluginYml
 import io.github.grassmc.paperdev.dsl.PaperVersions
 import io.github.grassmc.paperdev.namespace.Namespace
+import io.github.grassmc.paperdev.namespace.PluginNamespace
 import io.github.grassmc.paperdev.namespace.PluginNamespaceFinder
 import io.github.grassmc.paperdev.tasks.CollectPluginNamespacesTask
 import io.github.grassmc.paperdev.tasks.PaperLibrariesJsonTask
@@ -101,9 +102,9 @@ abstract class PaperDevGradlePlugin : Plugin<Project> {
                 val namespaces = jackson.readValue<List<Namespace>>(namespacesJson)
 
                 this@registerTasks.extensions.getByType<PaperPluginYml>().apply {
-                    main.convention(PluginNamespaceFinder.Type.MAIN.findFrom(namespaces)?.name)
-                    bootstrapper.convention(PluginNamespaceFinder.Type.BOOTSTRAPPER.findFrom(namespaces)?.name)
-                    loader.convention(PluginNamespaceFinder.Type.LOADER.findFrom(namespaces)?.name)
+                    main.convention(PluginNamespaceFinder.Type.MAIN.findFrom(namespaces)?.name?.let(::PluginNamespace))
+                    bootstrapper.convention(PluginNamespaceFinder.Type.BOOTSTRAPPER.findFrom(namespaces)?.name?.let(::PluginNamespace))
+                    loader.convention(PluginNamespaceFinder.Type.LOADER.findFrom(namespaces)?.name?.let(::PluginNamespace))
                 }
             }
         }
