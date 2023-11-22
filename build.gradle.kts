@@ -64,6 +64,13 @@ gradlePlugin {
     }
 }
 
+signing {
+    val signingKeyId: String? by project
+    val signingKey: String? by project
+    val signingPassword: String? by project
+    useInMemoryPgpKeys(signingKeyId, signingKey?.replace("\\n", "\n"), signingPassword)
+}
+
 tasks {
     withType<KotlinCompile> {
         kotlinOptions.jvmTarget = "17"
