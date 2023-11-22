@@ -49,8 +49,12 @@ jobs:
         uses: gradle/gradle-build-action@v2
         with:
           cache-read-only: true
-          arguments: publishPlugins
 
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Publish to Gradle Plugin Portal
+        run: ./gradlew publishPlugins
         env:
           ORG_GRADLE_PROJECT_signingKey: ${{ secrets.GPG_KEY }}
           ORG_GRADLE_PROJECT_signingPassword: ${{ secrets.GPG_PASSWORD }}
