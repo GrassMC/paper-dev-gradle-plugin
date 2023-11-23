@@ -81,7 +81,7 @@ abstract class PaperDevGradlePlugin : Plugin<Project> {
             description = "Collects base classes of the compiled classes from the project."
 
             classes.from(compiledClasses())
-            destinationDir = paperDevDir(name)
+            destinationDir = temporaryDirFactory.create()
         }
 
         val detectPluginNamespaces = tasks.register(DETECT_PLUGIN_NAMESPACES_TASK_NAME) {
