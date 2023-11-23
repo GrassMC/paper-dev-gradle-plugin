@@ -52,9 +52,9 @@ abstract class CollectBaseClassesTask : DefaultTask() {
 
                 readClasses += className
                 when (change.changeType) {
-                    ChangeType.ADDED, ChangeType.MODIFIED -> destinationDir
-                        .path(className.namespace())
-                        .writeLines(readBaseClasses(change.file.readBytes()))
+                    ChangeType.ADDED, ChangeType.MODIFIED -> readBaseClasses(change.file.readBytes())
+                        .takeIf { it.isNotEmpty() }
+                        ?.let { destinationDir.path(className.namespace()).writeLines(it) }
 
                     else -> destinationDir.path(className).deleteIfExists()
                 }
