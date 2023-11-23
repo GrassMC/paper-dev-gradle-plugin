@@ -77,7 +77,7 @@ abstract class PaperDevGradlePlugin : Plugin<Project> {
 
 
     private fun Project.registerTasks() {
-        val collectPluginNamespaces = tasks.register<CollectBaseClassesTask>(COLLECT_BASE_CLASSES_TASK_NAME) {
+        val collectBaseClasses = tasks.register<CollectBaseClassesTask>(COLLECT_BASE_CLASSES_TASK_NAME) {
             description = "Collects base classes of the compiled classes from the project."
 
             classes.from(compiledClasses())
@@ -89,7 +89,7 @@ abstract class PaperDevGradlePlugin : Plugin<Project> {
             group = TASK_GROUP
             description = "Detects plugin namespaces and set conventions for pluginYml namespaces."
 
-            dependsOn(collectPluginNamespaces)
+            dependsOn(collectBaseClasses)
             doFirst {
 //                val jackson = JsonMapper().registerKotlinModule()
 //                val namespacesJson = collectPluginNamespaces.get().outputJsonFile.get().asFile
