@@ -1,0 +1,3 @@
+org/bukkit/plugin/java/JavaPlugin
+org/bukkit/plugin/PluginBase
+org/bukkit/plugin/Plugin
