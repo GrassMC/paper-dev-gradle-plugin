@@ -81,6 +81,7 @@ abstract class PaperDevGradlePlugin : Plugin<Project> {
             description = "Collects base classes of the compiled classes from the project."
 
             classes.from(compiledClasses())
+            skipNestedClass.convention(true)
             destinationDir = temporaryDirFactory.create()
         }
 

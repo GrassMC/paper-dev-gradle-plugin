@@ -34,3 +34,7 @@ internal fun readBaseClasses(classBytes: ByteArray) = ClassReader(classBytes).le
         addAll(it.interfaces)
     }
 }
+
+private const val NESTED_CLASS_SEPARATOR = '$'
+
+internal fun isNestedClass(className: String) = NESTED_CLASS_SEPARATOR in className

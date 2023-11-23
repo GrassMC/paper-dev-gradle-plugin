@@ -16,11 +16,13 @@
 
 package io.github.grassmc.paperdev.tasks
 
+import io.github.grassmc.paperdev.utils.isNestedClass
 import io.github.grassmc.paperdev.utils.readBaseClasses
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileType
+import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
 import org.gradle.work.ChangeType
 import org.gradle.work.InputChanges
@@ -33,11 +35,16 @@ abstract class CollectBaseClassesTask : DefaultTask() {
     @get:SkipWhenEmpty
     abstract val classes: ConfigurableFileCollection
 
+    @get:Input
+    @get:Optional
+    abstract val skipNestedClass: Property<Boolean>
+
     @get:OutputDirectory
     abstract val destinationDir: DirectoryProperty
 
     @TaskAction
     fun collect(changes: InputChanges) {
+        val skipNestedClass = skipNestedClass.getOrElse(true)
         val readClasses = mutableSetOf<String>()
         changes
             .getFileChanges(classes)
@@ -46,6 +53,9 @@ abstract class CollectBaseClassesTask : DefaultTask() {
             .filter { it.file.path.endsWith(CLASS_FILE_EXTENSION) }
             .forEach { change ->
                 val className = change.normalizedPath.removeSuffix(CLASS_FILE_EXTENSION)
+                if (skipNestedClass && isNestedClass(className)) {
+                    return@forEach
+                }
                 if (className in readClasses) {
                     return@forEach
                 }
@@ -53,6 +63,7 @@ abstract class CollectBaseClassesTask : DefaultTask() {
                 readClasses += className
                 when (change.changeType) {
                     ChangeType.ADDED, ChangeType.MODIFIED -> readBaseClasses(change.file.readBytes())
+                        .filterNot { skipNestedClass && isNestedClass(it) }
                         .takeIf { it.isNotEmpty() }
                         ?.let { destinationDir.path(className.namespace()).writeLines(it) }
 
