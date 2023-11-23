@@ -28,13 +28,13 @@ import kotlin.io.path.deleteIfExists
 import kotlin.io.path.writeLines
 
 @CacheableTask
-abstract class CollectPluginNamespacesTask : DefaultTask() {
+abstract class CollectBaseClassesTask : DefaultTask() {
     @get:CompileClasspath
     @get:SkipWhenEmpty
     abstract val classes: ConfigurableFileCollection
 
     @get:OutputDirectory
-    abstract val collectedNamespaceDir: DirectoryProperty
+    abstract val destinationDir: DirectoryProperty
 
     @TaskAction
     fun collect(changes: InputChanges) {
@@ -52,11 +52,11 @@ abstract class CollectPluginNamespacesTask : DefaultTask() {
 
                 readClasses += className
                 when (change.changeType) {
-                    ChangeType.ADDED, ChangeType.MODIFIED -> collectedNamespaceDir
+                    ChangeType.ADDED, ChangeType.MODIFIED -> destinationDir
                         .path(className.namespace())
                         .writeLines(readBaseClasses(change.file.readBytes()))
 
-                    else -> collectedNamespaceDir.path(className).deleteIfExists()
+                    else -> destinationDir.path(className).deleteIfExists()
                 }
             }
     }

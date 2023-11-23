@@ -19,7 +19,7 @@ package io.github.grassmc.paperdev
 import io.github.grassmc.paperdev.dsl.PaperDevExtension
 import io.github.grassmc.paperdev.dsl.PaperPluginYml
 import io.github.grassmc.paperdev.dsl.PaperVersions
-import io.github.grassmc.paperdev.tasks.CollectPluginNamespacesTask
+import io.github.grassmc.paperdev.tasks.CollectBaseClassesTask
 import io.github.grassmc.paperdev.tasks.PaperLibrariesJsonTask
 import io.github.grassmc.paperdev.tasks.PaperPluginYmlTask
 import org.gradle.api.Plugin
@@ -77,12 +77,11 @@ abstract class PaperDevGradlePlugin : Plugin<Project> {
 
 
     private fun Project.registerTasks() {
-        val collectPluginNamespaces = tasks.register<CollectPluginNamespacesTask>(COLLECT_PLUGIN_NAMESPACES_TASK_NAME) {
-            group = TASK_GROUP
-            description = "Collects the namespaces and it parents of all compiled classes."
+        val collectPluginNamespaces = tasks.register<CollectBaseClassesTask>(COLLECT_BASE_CLASSES_TASK_NAME) {
+            description = "Collects base classes of the compiled classes from the project."
 
             classes.from(compiledClasses())
-            collectedNamespaceDir = paperDevDir(name)
+            destinationDir = paperDevDir(name)
         }
 
         val detectPluginNamespaces = tasks.register(DETECT_PLUGIN_NAMESPACES_TASK_NAME) {
@@ -167,7 +166,8 @@ abstract class PaperDevGradlePlugin : Plugin<Project> {
         private const val TASK_GROUP = "paper development"
         const val PAPER_PLUGIN_YML_TASK_NAME = "paperPluginYml"
         const val DETECT_PLUGIN_NAMESPACES_TASK_NAME = "detectPluginNamespaces"
-        const val COLLECT_PLUGIN_NAMESPACES_TASK_NAME = "collectPluginNamespaces"
+
+        const val COLLECT_BASE_CLASSES_TASK_NAME = "collectBaseClasses"
 
         const val PAPER_DEV_DIR = "paperDev"
         private const val PAPER_LIBS_LOADER_TEMPLATE_FILENAME = "PaperLibsLoader.java"
