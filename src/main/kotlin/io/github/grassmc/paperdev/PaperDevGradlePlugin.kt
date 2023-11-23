@@ -16,15 +16,9 @@
 
 package io.github.grassmc.paperdev
 
-import com.fasterxml.jackson.databind.json.JsonMapper
-import com.fasterxml.jackson.module.kotlin.readValue
-import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import io.github.grassmc.paperdev.dsl.PaperDevExtension
 import io.github.grassmc.paperdev.dsl.PaperPluginYml
 import io.github.grassmc.paperdev.dsl.PaperVersions
-import io.github.grassmc.paperdev.namespace.Namespace
-import io.github.grassmc.paperdev.namespace.PluginNamespace
-import io.github.grassmc.paperdev.namespace.PluginNamespaceFinder
 import io.github.grassmc.paperdev.tasks.CollectPluginNamespacesTask
 import io.github.grassmc.paperdev.tasks.PaperLibrariesJsonTask
 import io.github.grassmc.paperdev.tasks.PaperPluginYmlTask
@@ -88,7 +82,7 @@ abstract class PaperDevGradlePlugin : Plugin<Project> {
             description = "Collects the namespaces and it parents of all compiled classes."
 
             classes.from(compiledClasses())
-            outputJsonFile = paperDevFile("$name/namespaces.json")
+            collectedNamespaceDir = paperDevDir(name)
         }
 
         val detectPluginNamespaces = tasks.register(DETECT_PLUGIN_NAMESPACES_TASK_NAME) {
@@ -97,15 +91,15 @@ abstract class PaperDevGradlePlugin : Plugin<Project> {
 
             dependsOn(collectPluginNamespaces)
             doFirst {
-                val jackson = JsonMapper().registerKotlinModule()
-                val namespacesJson = collectPluginNamespaces.get().outputJsonFile.get().asFile
-                val namespaces = jackson.readValue<List<Namespace>>(namespacesJson)
-
-                this@registerTasks.extensions.getByType<PaperPluginYml>().apply {
-                    main.convention(PluginNamespaceFinder.Type.MAIN.findFrom(namespaces)?.name?.let(::PluginNamespace))
-                    bootstrapper.convention(PluginNamespaceFinder.Type.BOOTSTRAPPER.findFrom(namespaces)?.name?.let(::PluginNamespace))
-                    loader.convention(PluginNamespaceFinder.Type.LOADER.findFrom(namespaces)?.name?.let(::PluginNamespace))
-                }
+//                val jackson = JsonMapper().registerKotlinModule()
+//                val namespacesJson = collectPluginNamespaces.get().outputJsonFile.get().asFile
+//                val namespaces = jackson.readValue<List<Namespace>>(namespacesJson)
+//
+//                this@registerTasks.extensions.getByType<PaperPluginYml>().apply {
+//                    main.convention(PluginNamespaceFinder.Type.MAIN.findFrom(namespaces)?.name?.let(::PluginNamespace))
+//                    bootstrapper.convention(PluginNamespaceFinder.Type.BOOTSTRAPPER.findFrom(namespaces)?.name?.let(::PluginNamespace))
+//                    loader.convention(PluginNamespaceFinder.Type.LOADER.findFrom(namespaces)?.name?.let(::PluginNamespace))
+//                }
             }
         }
 

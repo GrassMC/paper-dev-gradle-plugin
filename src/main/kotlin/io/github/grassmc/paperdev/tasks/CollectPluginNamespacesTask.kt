@@ -16,47 +16,56 @@
 
 package io.github.grassmc.paperdev.tasks
 
-import com.fasterxml.jackson.databind.json.JsonMapper
-import com.fasterxml.jackson.module.kotlin.registerKotlinModule
-import io.github.grassmc.paperdev.namespace.Namespace
+import io.github.grassmc.paperdev.utils.readBaseClasses
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection
-import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.file.FileType
 import org.gradle.api.tasks.*
+import org.gradle.work.ChangeType
 import org.gradle.work.InputChanges
-import org.objectweb.asm.ClassReader
-import java.io.File
+import kotlin.io.path.deleteIfExists
+import kotlin.io.path.writeLines
 
 @CacheableTask
 abstract class CollectPluginNamespacesTask : DefaultTask() {
-    @get:[InputFiles SkipWhenEmpty PathSensitive(PathSensitivity.RELATIVE)]
+    @get:CompileClasspath
+    @get:SkipWhenEmpty
     abstract val classes: ConfigurableFileCollection
 
-    @get:OutputFile
-    abstract val outputJsonFile: RegularFileProperty
+    @get:OutputDirectory
+    abstract val collectedNamespaceDir: DirectoryProperty
 
     @TaskAction
     fun collect(changes: InputChanges) {
+        val readClasses = mutableSetOf<String>()
         changes
             .getFileChanges(classes)
             .asSequence()
-            .map { it.file }
-            .filter { it.isClassFile }
-            .map { it.classReader().readNamespace() }
-            .distinct()
-            .let { JsonMapper().registerKotlinModule().writeValueAsString(it) }
-            .also { outputJsonFile.get().asFile.writeText(it) }
+            .filter { it.fileType == FileType.FILE }
+            .filter { it.file.path.endsWith(CLASS_FILE_EXTENSION) }
+            .forEach { change ->
+                val className = change.normalizedPath.removeSuffix(CLASS_FILE_EXTENSION)
+                if (className in readClasses) {
+                    return@forEach
+                }
+
+                readClasses += className
+                when (change.changeType) {
+                    ChangeType.ADDED, ChangeType.MODIFIED -> collectedNamespaceDir
+                        .path(className.namespace())
+                        .writeLines(readBaseClasses(change.file.readBytes()))
+
+                    else -> collectedNamespaceDir.path(className).deleteIfExists()
+                }
+            }
     }
 
-    private val File.isClassFile get() = exists() && isFile && extension == "class"
-
-    private fun ClassReader.readNamespace() = Namespace(
-        className.namespace(),
-        superName.namespace(),
-        interfaces.map { it.namespace() },
-    )
-
-    private fun File.classReader() = inputStream().use { ClassReader(it) }
+    private fun DirectoryProperty.path(path: String) = file(path).get().asFile.toPath()
 
     private fun String.namespace(): String = this.replace('/', '.')
+
+    companion object {
+        private const val CLASS_FILE_EXTENSION = ".class"
+    }
 }
