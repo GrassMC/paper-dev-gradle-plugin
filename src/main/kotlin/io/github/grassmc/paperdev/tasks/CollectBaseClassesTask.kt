@@ -56,7 +56,7 @@ abstract class CollectBaseClassesTask : DefaultTask() {
                         .takeIf { it.isNotEmpty() }
                         ?.let { destinationDir.path(className.namespace()).writeLines(it) }
 
-                    else -> destinationDir.path(className).deleteIfExists()
+                    else -> destinationDir.path(className.namespace()).deleteIfExists()
                 }
             }
     }
