@@ -45,6 +45,7 @@ abstract class CollectBaseClassesTask : DefaultTask() {
     @TaskAction
     fun collect(changes: InputChanges) {
         val skipNestedClass = skipNestedClass.getOrElse(true)
+        logger.debug("Skip nested classes: $skipNestedClass")
         val readClasses = mutableSetOf<String>()
         changes
             .getFileChanges(classes)
@@ -66,8 +67,12 @@ abstract class CollectBaseClassesTask : DefaultTask() {
                         .filterNot { skipNestedClass && isNestedClass(it) }
                         .takeIf { it.isNotEmpty() }
                         ?.let { destinationDir.path(className.namespace()).writeLines(it) }
+                        .also { logger.debug("Collected base classes for $className") }
 
-                    else -> destinationDir.path(className.namespace()).deleteIfExists()
+                    else -> destinationDir
+                        .path(className.namespace())
+                        .deleteIfExists()
+                        .also { logger.debug("Removed base classes for $className") }
                 }
             }
     }
