@@ -14,6 +14,17 @@
  * limitations under the License.
  */
 
-package io.github.grassmc.paperdev.namespace
+package io.github.grassmc.paperdev.utils
 
-data class Namespace(val name: String, val superName: String, val interfaces: List<String>)
+import com.fasterxml.jackson.core.JsonGenerator
+import com.fasterxml.jackson.databind.SerializerProvider
+import com.fasterxml.jackson.databind.ser.std.StdSerializer
+import io.github.grassmc.paperdev.namespace.PluginNamespace
+
+object PluginNamespaceSerializer : StdSerializer<PluginNamespace>(PluginNamespace::class.java) {
+    private fun readResolve(): Any = PluginNamespaceSerializer
+
+    override fun serialize(value: PluginNamespace?, gen: JsonGenerator, provider: SerializerProvider) {
+        gen.writeString(value?.toString())
+    }
+}

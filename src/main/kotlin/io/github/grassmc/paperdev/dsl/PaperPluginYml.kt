@@ -19,6 +19,7 @@ package io.github.grassmc.paperdev.dsl
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonPropertyOrder
 import com.fasterxml.jackson.annotation.JsonValue
+import io.github.grassmc.paperdev.namespace.PluginNamespace
 import org.gradle.api.Project
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Nested
@@ -54,7 +55,7 @@ class PaperPluginYml(@JsonIgnore private val project: Project) : PermissionConta
     val version = project.objects.property<String>()
 
     @Input
-    val main = project.objects.property<String>()
+    val main = project.objects.property<PluginNamespace>()
 
     @Input
     val apiVersion = project.objects.property<ApiVersion>()
@@ -77,11 +78,11 @@ class PaperPluginYml(@JsonIgnore private val project: Project) : PermissionConta
 
     @Input
     @Optional
-    val bootstrapper = project.objects.property<String>()
+    val bootstrapper = project.objects.property<PluginNamespace>()
 
     @Input
     @Optional
-    val loader = project.objects.property<String>()
+    val loader = project.objects.property<PluginNamespace>()
 
     @Input
     @Optional
