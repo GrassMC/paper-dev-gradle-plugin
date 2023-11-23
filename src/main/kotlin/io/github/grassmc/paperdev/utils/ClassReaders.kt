@@ -19,15 +19,16 @@ package io.github.grassmc.paperdev.utils
 import org.objectweb.asm.ClassReader
 
 private const val OBJECT_CLASS = "java/lang/Object"
+private const val RECORD_CLASS = "java/lang/Record"
 
 /**
  * Reads and returns the list of base class names from [classBytes] bytecode.
  * The list contains the superclass and all interfaces implemented by the class.
- * The list does not contain [java.lang.Object] class.
+ * The list does not contain [java.lang.Object] class and [java.lang.Record] class.
  */
 internal fun readBaseClasses(classBytes: ByteArray) = ClassReader(classBytes).let {
     buildList {
-        it.superName.takeUnless { it == OBJECT_CLASS }?.let { add(it) }
+        it.superName.takeUnless { it == OBJECT_CLASS || it == RECORD_CLASS }?.let { add(it) }
         addAll(it.interfaces)
     }
 }
