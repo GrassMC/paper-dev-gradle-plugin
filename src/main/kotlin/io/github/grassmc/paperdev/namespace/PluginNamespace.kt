@@ -28,7 +28,9 @@ sealed interface PluginNamespace
  */
 internal object EmptyNamespace : PluginNamespace
 
-internal data class SpecifiedNamespace(val className: String) : PluginNamespace
+internal data class SpecifiedNamespace(val className: String) : PluginNamespace {
+    override fun toString() = className
+}
 
 /**
  * Creates a [PluginNamespace] from the given full specified [className].
