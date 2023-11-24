@@ -19,6 +19,8 @@ package io.github.grassmc.paperdev
 import io.github.grassmc.paperdev.dsl.PaperDevExtension
 import io.github.grassmc.paperdev.dsl.PaperPluginYml
 import io.github.grassmc.paperdev.dsl.PaperVersions
+import io.github.grassmc.paperdev.namespace.EmptyNamespace
+import io.github.grassmc.paperdev.namespace.PluginNamespaceFinder
 import io.github.grassmc.paperdev.tasks.CollectBaseClassesTask
 import io.github.grassmc.paperdev.tasks.PaperLibrariesJsonTask
 import io.github.grassmc.paperdev.tasks.PaperPluginYmlTask
@@ -28,6 +30,7 @@ import org.gradle.api.plugins.JavaPlugin
 import org.gradle.api.tasks.Copy
 import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.SourceSetContainer
+import org.gradle.api.tasks.TaskProvider
 import org.gradle.jvm.tasks.Jar
 import org.gradle.kotlin.dsl.*
 
@@ -85,24 +88,7 @@ abstract class PaperDevGradlePlugin : Plugin<Project> {
             destinationDir = temporaryDirFactory.create()
         }
 
-        val detectPluginNamespaces = tasks.register(DETECT_PLUGIN_NAMESPACES_TASK_NAME) {
-            group = TASK_GROUP
-            description = "Detects plugin namespaces and set conventions for pluginYml namespaces."
-
-            dependsOn(collectBaseClasses)
-            doFirst {
-//                val jackson = JsonMapper().registerKotlinModule()
-//                val namespacesJson = collectPluginNamespaces.get().outputJsonFile.get().asFile
-//                val namespaces = jackson.readValue<List<Namespace>>(namespacesJson)
-//
-//                this@registerTasks.extensions.getByType<PaperPluginYml>().apply {
-//                    main.convention(PluginNamespaceFinder.Type.MAIN.findFrom(namespaces)?.name?.let(::PluginNamespace))
-//                    bootstrapper.convention(PluginNamespaceFinder.Type.BOOTSTRAPPER.findFrom(namespaces)?.name?.let(::PluginNamespace))
-//                    loader.convention(PluginNamespaceFinder.Type.LOADER.findFrom(namespaces)?.name?.let(::PluginNamespace))
-//                }
-            }
-        }
-
+        val detectPluginNamespaces = registerDetectPluginNamespacesTasks(collectBaseClasses)
         val pluginYaml = tasks.register<PaperPluginYmlTask>(PAPER_PLUGIN_YML_TASK_NAME) {
             group = TASK_GROUP
             description = "Generates a paper-plugin.yml file for the project."
@@ -154,6 +140,42 @@ abstract class PaperDevGradlePlugin : Plugin<Project> {
         .getByName(SourceSet.MAIN_SOURCE_SET_NAME)
         .output
         .classesDirs
+
+    private fun Project.registerDetectPluginNamespacesTasks(collectBaseClasses: TaskProvider<CollectBaseClassesTask>) =
+        tasks.register(DETECT_PLUGIN_NAMESPACES_TASK_NAME) {
+            group = TASK_GROUP
+            description = "Detects plugin namespaces and set conventions for pluginYml namespaces."
+
+            dependsOn(collectBaseClasses)
+            doFirst {
+                val namespaces = collectBaseClasses.get().destinationDir.asFileTree.files.associate {
+                    it.name to it.readLines().toSet()
+                }
+                this.extensions.configure<PaperPluginYml> {
+                    if (main.orNull.let { it is EmptyNamespace || it == null }) {
+                        val namespace = PluginNamespaceFinder.EntryFor.Main.find(namespaces)
+                        main.convention(namespace)
+                        if (namespace != EmptyNamespace) {
+                            logger.debug("Main namespace detected: {}", namespace)
+                        }
+                    }
+                    if (loader.orNull.let { it is EmptyNamespace || it == null }) {
+                        val namespace = PluginNamespaceFinder.EntryFor.Loader.find(namespaces)
+                        loader.convention(namespace)
+                        if (namespace != EmptyNamespace) {
+                            logger.debug("Loader namespace detected: {}", namespace)
+                        }
+                    }
+                    if (bootstrapper.orNull.let { it is EmptyNamespace || it == null }) {
+                        val namespace = PluginNamespaceFinder.EntryFor.Bootstrapper.find(namespaces)
+                        bootstrapper.convention(namespace)
+                        if (namespace != EmptyNamespace) {
+                            logger.debug("Bootstrapper namespace detected: {}", namespace)
+                        }
+                    }
+                }
+            }
+        }
 
     private fun Project.paperDevFile(path: String) = layout.buildDirectory.file("$PAPER_DEV_DIR/$path")
 
