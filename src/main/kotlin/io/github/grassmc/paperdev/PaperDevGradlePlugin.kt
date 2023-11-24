@@ -20,6 +20,7 @@ import io.github.grassmc.paperdev.dsl.PaperDevExtension
 import io.github.grassmc.paperdev.dsl.PaperPluginYml
 import io.github.grassmc.paperdev.dsl.PaperVersions
 import io.github.grassmc.paperdev.namespace.EmptyNamespace
+import io.github.grassmc.paperdev.namespace.PluginNamespace
 import io.github.grassmc.paperdev.namespace.PluginNamespaceFinder
 import io.github.grassmc.paperdev.tasks.CollectBaseClassesTask
 import io.github.grassmc.paperdev.tasks.PaperLibrariesJsonTask
@@ -27,6 +28,7 @@ import io.github.grassmc.paperdev.tasks.PaperPluginYmlTask
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.plugins.JavaPlugin
+import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Copy
 import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.SourceSetContainer
@@ -88,7 +90,7 @@ abstract class PaperDevGradlePlugin : Plugin<Project> {
             destinationDir = temporaryDirFactory.create()
         }
 
-        val findEntryNamespaces = registerFindEntryNamespacesTasks(collectBaseClasses)
+        val findEntryNamespaces = registerFindEntryNamespacesTask(collectBaseClasses)
         val pluginYaml = tasks.register<PaperPluginYmlTask>(PAPER_PLUGIN_YML_TASK_NAME) {
             group = TASK_GROUP
             description = "Generates a paper-plugin.yml file for the project."
@@ -141,7 +143,7 @@ abstract class PaperDevGradlePlugin : Plugin<Project> {
         .output
         .classesDirs
 
-    private fun Project.registerFindEntryNamespacesTasks(collectBaseClasses: TaskProvider<CollectBaseClassesTask>) =
+    private fun Project.registerFindEntryNamespacesTask(collectBaseClasses: TaskProvider<CollectBaseClassesTask>) =
         tasks.register(FIND_ENTRY_NAMESPACES_TASK_NAME) {
             group = TASK_GROUP
             description = "Finds the entry namespaces and assigns default values to the pluginYml extension."
@@ -152,30 +154,35 @@ abstract class PaperDevGradlePlugin : Plugin<Project> {
                     it.name to it.readLines().toSet()
                 }
                 this.extensions.configure<PaperPluginYml> {
-                    if (main.orNull.let { it is EmptyNamespace || it == null }) {
-                        val namespace = PluginNamespaceFinder.EntryFor.Main.find(namespaces)
-                        main.convention(namespace)
-                        if (namespace != EmptyNamespace) {
-                            logger.debug("Main namespace founded: {}", namespace)
-                        }
-                    }
-                    if (loader.orNull.let { it is EmptyNamespace || it == null }) {
-                        val namespace = PluginNamespaceFinder.EntryFor.Loader.find(namespaces)
-                        loader.convention(namespace)
-                        if (namespace != EmptyNamespace) {
-                            logger.debug("Loader namespace founded: {}", namespace)
-                        }
-                    }
-                    if (bootstrapper.orNull.let { it is EmptyNamespace || it == null }) {
-                        val namespace = PluginNamespaceFinder.EntryFor.Bootstrapper.find(namespaces)
-                        bootstrapper.convention(namespace)
-                        if (namespace != EmptyNamespace) {
-                            logger.debug("Bootstrapper namespace founded: {}", namespace)
-                        }
-                    }
+                    findAndSetDefaultEntryNamespace(namespaces, main, PluginNamespaceFinder.EntryFor.Main)
+                        .takeUnless { it is EmptyNamespace }
+                        ?.let { logger.debug("Main namespace founded: {}", it) }
+                    findAndSetDefaultEntryNamespace(namespaces, loader, PluginNamespaceFinder.EntryFor.Loader)
+                        .takeUnless { it is EmptyNamespace }
+                        ?.let { logger.debug("Loader namespace founded: {}", it) }
+                    findAndSetDefaultEntryNamespace(
+                        namespaces,
+                        bootstrapper,
+                        PluginNamespaceFinder.EntryFor.Bootstrapper
+                    )
+                        .takeUnless { it is EmptyNamespace }
+                        ?.let { logger.debug("Bootstrapper namespace founded: {}", it) }
                 }
             }
         }
+
+    private fun findAndSetDefaultEntryNamespace(
+        namespaces: Map<String, Set<String>>,
+        property: Property<PluginNamespace>,
+        finder: PluginNamespaceFinder.EntryFor
+    ): PluginNamespace {
+        val currentNamespace = property.orNull
+        if (currentNamespace != null && currentNamespace != EmptyNamespace) {
+            return EmptyNamespace
+        }
+
+        return finder.find(namespaces).also { property.convention(it) }
+    }
 
     private fun Project.paperDevFile(path: String) = layout.buildDirectory.file("$PAPER_DEV_DIR/$path")
 
