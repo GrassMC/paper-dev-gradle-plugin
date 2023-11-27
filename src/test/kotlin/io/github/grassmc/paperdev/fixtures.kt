@@ -22,6 +22,5 @@ import org.gradle.testfixtures.ProjectBuilder
 
 fun withProject(name: String = "test-plugin", action: Project.() -> Unit) {
     val project = ProjectBuilder.builder().withName(name).build()
-    project.apply<PaperDevGradlePlugin>()
     action(project)
 }
