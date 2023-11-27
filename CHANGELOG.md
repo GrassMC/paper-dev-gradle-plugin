@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.2](https://github.com/GrassMC/paper-dev-gradle-plugin/compare/v0.2.1...v0.2.2) (2023-11-27)
+
+
+### Documentation
+
+* update outdated ([7051560](https://github.com/GrassMC/paper-dev-gradle-plugin/commit/70515608af4b16fb6db6157a3e10853aeb2c2463))
+
 ## [0.2.1](https://github.com/GrassMC/paper-dev-gradle-plugin/compare/v0.2.0...v0.2.1) (2023-11-20)
 
 
