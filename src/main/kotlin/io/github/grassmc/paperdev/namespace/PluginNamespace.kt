@@ -35,4 +35,8 @@ internal data class SpecifiedNamespace(val className: String) : PluginNamespace 
 /**
  * Creates a [PluginNamespace] from the given full specified [className].
  */
-fun PluginNamespace(className: String): PluginNamespace = SpecifiedNamespace(className)
+fun PluginNamespace(className: String): PluginNamespace =
+    if (className.isBlank())
+        EmptyNamespace
+    else
+        SpecifiedNamespace(className)
