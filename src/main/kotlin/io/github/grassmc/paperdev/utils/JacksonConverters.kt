@@ -18,6 +18,7 @@ package io.github.grassmc.paperdev.utils
 
 import com.fasterxml.jackson.databind.util.StdConverter
 import io.github.grassmc.paperdev.dsl.PluginDependencies
+import io.github.grassmc.paperdev.namespace.PluginNamespace
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
@@ -39,4 +40,8 @@ object PluginDependenciesConverter : StdConverter<PluginDependencies, Map<String
         "bootstrap" to value.bootstrap.asMap,
         "server" to value.server.asMap
     )
+}
+
+object PluginNamespaceConverter : StdConverter<PluginNamespace, String>() {
+    override fun convert(value: PluginNamespace) = value.toString()
 }

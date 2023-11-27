@@ -33,7 +33,7 @@ object YamlSerializer {
                 .addConverter(PropertyAsValueConverter)
                 .addConverter(ListPropertyAsListConverter)
                 .addConverter(PluginDependenciesConverter)
-                .addSerializer(PluginNamespaceSerializer)
+                .addConverter(PluginNamespaceConverter)
         )
     }
 
