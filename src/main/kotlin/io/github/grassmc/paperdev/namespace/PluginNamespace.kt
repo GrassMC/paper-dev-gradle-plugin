@@ -24,7 +24,7 @@ sealed interface PluginNamespace
 
 /**
  * Represents an empty namespace.
- * The empty namespace will be resolved from collected project namespaces when serializing.
+ * `findEntryNamespaces` task will resolve to this namespace if entry points are found.
  */
 internal object EmptyNamespace : PluginNamespace
 
