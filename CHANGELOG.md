@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.3](https://github.com/GrassMC/paper-dev-gradle-plugin/compare/v0.2.2...v0.2.3) (2023-11-28)
+
+
+### Bug Fixes
+
+* **findEntryNamespacesTask:** extension of type 'PaperPluginYml' does not exist ([#58](https://github.com/GrassMC/paper-dev-gradle-plugin/issues/58)) ([95a1b6b](https://github.com/GrassMC/paper-dev-gradle-plugin/commit/95a1b6b5b01e235bdc408396a9dd68f8ac7482a1))
+
 ## [0.2.2](https://github.com/GrassMC/paper-dev-gradle-plugin/compare/v0.2.1...v0.2.2) (2023-11-28)
 
 
