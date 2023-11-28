@@ -153,7 +153,7 @@ abstract class PaperDevGradlePlugin : Plugin<Project> {
                 val namespaces = collectBaseClasses.get().destinationDir.asFileTree.files.associate {
                     it.name to it.readLines().toSet()
                 }
-                this.extensions.configure<PaperPluginYml> {
+                this@registerFindEntryNamespacesTask.extensions.configure<PaperPluginYml> {
                     findAndSetDefaultEntryNamespace(namespaces, main, PluginNamespaceFinder.EntryFor.Main)
                         .takeUnless { it is EmptyNamespace }
                         ?.let { logger.debug("Main namespace founded: {}", it) }
