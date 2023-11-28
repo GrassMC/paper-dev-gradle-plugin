@@ -14,13 +14,20 @@
  * limitations under the License.
  */
 
-package io.github.grassmc.paperdev
+package io.github.grassmc.paperdev.namespace
 
-import org.gradle.api.Project
-import org.gradle.kotlin.dsl.apply
-import org.gradle.testfixtures.ProjectBuilder
+import kotlin.test.Test
+import kotlin.test.assertIs
 
-fun withProject(name: String = "test-plugin", action: Project.() -> Unit) {
-    val project = ProjectBuilder.builder().withName(name).build()
-    action(project)
+
+class PluginNamespaceTest {
+    @Test
+    fun `fun PluginNamespace should return an instance of SpecifiedNamespace`() {
+        assertIs<SpecifiedNamespace>(PluginNamespace("io.github.grassmc.paperdev.Test"))
+    }
+
+    @Test
+    fun `fun PluginNamespace should return an instance of EmptyNamespace`() {
+        assertIs<EmptyNamespace>(PluginNamespace(""))
+    }
 }

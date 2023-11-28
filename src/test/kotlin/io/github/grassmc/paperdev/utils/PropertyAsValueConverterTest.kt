@@ -14,30 +14,33 @@
  * limitations under the License.
  */
 
-package io.github.grassmc.paperdev
+package io.github.grassmc.paperdev.utils
 
-import org.junit.jupiter.api.assertDoesNotThrow
+import io.github.grassmc.paperdev.withProject
+import org.gradle.kotlin.dsl.property
 import kotlin.test.Test
-import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
+import kotlin.test.assertEquals
 
-class PaperDevGradlePluginTest {
-    @Test
-    fun `plugin should be applied`() {
-        assertDoesNotThrow { withProject { } }
-    }
 
+class PropertyAsValueConverterTest {
     @Test
-    fun `java plugin should be applied`() {
+    fun `should return value of property`() {
         withProject {
-            assertTrue(plugins.hasPlugin("java"))
+            val property = objects.property<String>()
+            property.set("test")
+
+            val value = PropertyAsValueConverter.convert(property)
+            assertEquals("test", value)
         }
     }
 
     @Test
-    fun `pluginYml extension should be registered`() {
+    fun `should return null if property is not set`() {
         withProject {
-            assertNotNull(extensions.findByName("pluginYml"))
+            val property = objects.property<String>()
+
+            val value = PropertyAsValueConverter.convert(property)
+            assertEquals(null, value)
         }
     }
 }

@@ -14,13 +14,22 @@
  * limitations under the License.
  */
 
-package io.github.grassmc.paperdev
+package io.github.grassmc.paperdev.utils
 
-import org.gradle.api.Project
-import org.gradle.kotlin.dsl.apply
-import org.gradle.testfixtures.ProjectBuilder
+import io.github.grassmc.paperdev.withProject
+import org.gradle.kotlin.dsl.listProperty
+import kotlin.test.Test
+import kotlin.test.assertContentEquals
 
-fun withProject(name: String = "test-plugin", action: Project.() -> Unit) {
-    val project = ProjectBuilder.builder().withName(name).build()
-    action(project)
+class ListPropertyAsListConverterTest {
+    @Test
+    fun `should return value of list property`() {
+        withProject {
+            val listProperty = objects.listProperty<String>()
+            listProperty.set(listOf("test", "test2"))
+
+            val value = ListPropertyAsListConverter.convert(listProperty)
+            assertContentEquals(listOf("test", "test2"), value)
+        }
+    }
 }

@@ -14,13 +14,16 @@
  * limitations under the License.
  */
 
-package io.github.grassmc.paperdev
+package io.github.grassmc.paperdev.dsl
 
-import org.gradle.api.Project
-import org.gradle.kotlin.dsl.apply
-import org.gradle.testfixtures.ProjectBuilder
+import org.junit.jupiter.api.Test
+import kotlin.test.assertEquals
 
-fun withProject(name: String = "test-plugin", action: Project.() -> Unit) {
-    val project = ProjectBuilder.builder().withName(name).build()
-    action(project)
+class PaperVersionsTest {
+    @Test
+    fun `toDependencyNotation should return the correct dependency notation`() {
+        PaperVersions.values().forEach {
+            assertEquals("io.papermc.paper:paper-api:${it.version}-R0.1-SNAPSHOT", it.toDependencyNotation())
+        }
+    }
 }

@@ -14,13 +14,17 @@
  * limitations under the License.
  */
 
-package io.github.grassmc.paperdev
+package io.github.grassmc.paperdev.utils
 
-import org.gradle.api.Project
-import org.gradle.kotlin.dsl.apply
-import org.gradle.testfixtures.ProjectBuilder
+import io.github.grassmc.paperdev.namespace.PluginNamespace
+import kotlin.test.Test
+import kotlin.test.assertEquals
 
-fun withProject(name: String = "test-plugin", action: Project.() -> Unit) {
-    val project = ProjectBuilder.builder().withName(name).build()
-    action(project)
+class PluginNamespaceConverterTest {
+    @Test
+    fun `should return specific string`() {
+        val namespace = PluginNamespace("io.github.grassmc.paperdev.Test")
+        val actual = PluginNamespaceConverter.convert(namespace)
+        assertEquals("io.github.grassmc.paperdev.Test", actual)
+    }
 }
