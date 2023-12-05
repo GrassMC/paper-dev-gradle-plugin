@@ -19,17 +19,12 @@ package io.github.grassmc.paperdev
 import io.github.grassmc.paperdev.dsl.PaperDevExtension
 import io.github.grassmc.paperdev.dsl.PaperPluginYml
 import io.github.grassmc.paperdev.dsl.PaperVersions
-import io.github.grassmc.paperdev.namespace.EmptyNamespace
-import io.github.grassmc.paperdev.namespace.PluginNamespace
-import io.github.grassmc.paperdev.namespace.PluginNamespaceFinder
 import io.github.grassmc.paperdev.tasks.*
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.plugins.JavaPlugin
-import org.gradle.api.provider.Property
 import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.SourceSetContainer
-import org.gradle.api.tasks.TaskProvider
 import org.gradle.jvm.tasks.Jar
 import org.gradle.kotlin.dsl.*
 
@@ -79,22 +74,23 @@ abstract class PaperDevGradlePlugin : Plugin<Project> {
 
 
     private fun Project.registerTasks() {
+        val generatePluginLoader = registerGeneratePluginLoaderTask()
+        extensions.getByType<SourceSetContainer>().named(SourceSet.MAIN_SOURCE_SET_NAME) {
+            java.srcDirs(generatePluginLoader.map { it.generatedDirectory })
+        }
+
         val collectBaseClasses = registerCollectBaseClassesTask()
-        val findEntryNamespaces = registerFindEntryNamespacesTask(collectBaseClasses)
+        val findEntryNamespaces = registerFindEntryNamespacesTask(collectBaseClasses.map { it.destinationDir }).apply {
+            configure {
+                dependsOn(collectBaseClasses)
+            }
+        }
         val pluginYaml = registerPaperPluginYmlTask().apply {
             configure {
                 dependsOn(findEntryNamespaces)
             }
         }
         val paperLibrariesJson = registerPaperLibrariesJsonTask()
-
-        val generatePluginLoader = registerGeneratePluginLoaderTask()
-        plugins.withType<JavaPlugin> {
-            extensions.getByType<SourceSetContainer>().named(SourceSet.MAIN_SOURCE_SET_NAME) {
-                java.srcDirs(generatePluginLoader.map { it.generatedDirectory })
-            }
-        }
-
         tasks.withType<Jar> {
             dependsOn(pluginYaml, paperLibrariesJson)
             from(pluginYaml.map { it.outputDir })
@@ -102,55 +98,11 @@ abstract class PaperDevGradlePlugin : Plugin<Project> {
         }
     }
 
-    private fun Project.registerFindEntryNamespacesTask(collectBaseClasses: TaskProvider<CollectBaseClassesTask>) =
-        tasks.register(FIND_ENTRY_NAMESPACES_TASK_NAME) {
-            group = TASK_GROUP
-            description = "Finds the entry namespaces and assigns default values to the pluginYml extension."
-
-            dependsOn(collectBaseClasses)
-            doFirst {
-                val namespaces = collectBaseClasses.get().destinationDir.asFileTree.files.associate {
-                    it.name to it.readLines().toSet()
-                }
-                this@registerFindEntryNamespacesTask.extensions.configure<PaperPluginYml> {
-                    findAndSetDefaultEntryNamespace(namespaces, main, PluginNamespaceFinder.EntryFor.Main)
-                        .takeUnless { it is EmptyNamespace }
-                        ?.let { logger.debug("Main namespace founded: {}", it) }
-                    findAndSetDefaultEntryNamespace(namespaces, loader, PluginNamespaceFinder.EntryFor.Loader)
-                        .takeUnless { it is EmptyNamespace }
-                        ?.let { logger.debug("Loader namespace founded: {}", it) }
-                    findAndSetDefaultEntryNamespace(
-                        namespaces,
-                        bootstrapper,
-                        PluginNamespaceFinder.EntryFor.Bootstrapper
-                    )
-                        .takeUnless { it is EmptyNamespace }
-                        ?.let { logger.debug("Bootstrapper namespace founded: {}", it) }
-                }
-            }
-        }
-
-    private fun findAndSetDefaultEntryNamespace(
-        namespaces: Map<String, Set<String>>,
-        property: Property<PluginNamespace>,
-        finder: PluginNamespaceFinder.EntryFor
-    ): PluginNamespace {
-        val currentNamespace = property.orNull
-        if (currentNamespace != null && currentNamespace != EmptyNamespace) {
-            return EmptyNamespace
-        }
-
-        return finder.find(namespaces).also { property.convention(it) }
-    }
-
     companion object {
-        private const val PLUGIN_YML_EXTENSION = "pluginYml"
-
         const val PAPER_LIBS_CONFIGURATION_NAME = "paperLibs"
+        const val PAPER_DEV_DIR = "paperDev"
 
         internal const val TASK_GROUP = "paper development"
-        const val FIND_ENTRY_NAMESPACES_TASK_NAME = "findEntryNamespaces"
-
-        const val PAPER_DEV_DIR = "paperDev"
+        private const val PLUGIN_YML_EXTENSION = "pluginYml"
     }
 }
