@@ -22,6 +22,7 @@ import io.github.grassmc.paperdev.namespace.EmptyNamespace
 import io.github.grassmc.paperdev.namespace.PluginNamespace
 import io.github.grassmc.paperdev.namespace.PluginNamespaceFinder
 import org.gradle.api.Project
+import org.gradle.api.Task
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
@@ -39,18 +40,30 @@ internal fun Project.registerFindEntryNamespacesTask(baseClassesDir: Provider<Di
                 it.name to it.readLines().toSet()
             }
             this@registerFindEntryNamespacesTask.extensions.configure<PaperPluginYml> {
-                PluginNamespaceFinder.EntryFor.Main.findAndSetDefault(namespaces, main)
-                    .takeUnless { it is EmptyNamespace }
-                    ?.let { logger.debug("Main namespace founded: {}", it) }
-                PluginNamespaceFinder.EntryFor.Loader.findAndSetDefault(namespaces, loader)
-                    .takeUnless { it is EmptyNamespace }
-                    ?.let { logger.debug("Loader namespace founded: {}", it) }
-                PluginNamespaceFinder.EntryFor.Bootstrapper.findAndSetDefault(namespaces, bootstrapper)
-                    .takeUnless { it is EmptyNamespace }
-                    ?.let { logger.debug("Bootstrapper namespace founded: {}", it) }
+                PluginNamespaceFinder.EntryFor.Main.run {
+                    findAndSetDefault(namespaces, main).also {
+                        logIfFound(it, this)
+                    }
+                }
+                PluginNamespaceFinder.EntryFor.Loader.run {
+                    findAndSetDefault(namespaces, loader).also {
+                        logIfFound(it, this)
+                    }
+                }
+                PluginNamespaceFinder.EntryFor.Bootstrapper.run {
+                    findAndSetDefault(namespaces, bootstrapper).also {
+                        logIfFound(it, this)
+                    }
+                }
             }
         }
     }
+
+private fun Task.logIfFound(namespace: PluginNamespace, entryFor: PluginNamespaceFinder.EntryFor) {
+    if (namespace !is EmptyNamespace) {
+        logger.debug("{} namespace founded: {}", entryFor.name, namespace)
+    }
+}
 
 private fun PluginNamespaceFinder.EntryFor.findAndSetDefault(
     namespaces: Map<String, Set<String>>,
