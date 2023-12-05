@@ -66,7 +66,7 @@ internal fun Project.registerPaperPluginYmlTask() =
         group = PaperDevGradlePlugin.TASK_GROUP
         description = "Generates a paper-plugin.yml file for the project."
 
-        pluginYml.convention(provider { extensions.findByType<PaperPluginYml>() })
+        pluginYml.convention(provider { this@registerPaperPluginYmlTask.extensions.findByType<PaperPluginYml>() })
         outputDir.convention(layout.buildDirectory.dir(DEFAULT_PAPER_PLUGIN_YML_DIR))
     }
 
