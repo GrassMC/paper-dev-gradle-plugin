@@ -1,8 +1,8 @@
 @file:Suppress("UnstableApiUsage")
 
+import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
+import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-
-fun Project.prop(propName: String) = providers.gradleProperty(propName)
 
 plugins {
     `kotlin-dsl`
@@ -26,6 +26,10 @@ kotlin {
         languageVersion = JavaLanguageVersion.of(17)
         vendor = JvmVendorSpec.AZUL
     }
+
+    afterEvaluate {
+        associateAssociateFunctionalTestCompilationWithMain()
+    }
 }
 
 testing {
@@ -35,6 +39,7 @@ testing {
         }
 
         val functionalTest by registering(JvmTestSuite::class) {
+            testType = TestSuiteType.FUNCTIONAL_TEST
             useKotlinTest(libs.versions.kotlin)
 
             dependencies {
@@ -76,11 +81,21 @@ tasks {
         kotlinOptions.jvmTarget = "17"
     }
 
-    named<Task>("check") {
+    check {
         dependsOn(testing.suites.named("functionalTest"))
     }
 
     validatePlugins {
         enableStricterValidation = true
+    }
+}
+
+fun Project.prop(propName: String) = providers.gradleProperty(propName)
+
+fun KotlinJvmProjectExtension.associateAssociateFunctionalTestCompilationWithMain() {
+    target.compilations {
+        named("functionalTest") {
+            associateWith(getByName(KotlinCompilation.MAIN_COMPILATION_NAME))
+        }
     }
 }
