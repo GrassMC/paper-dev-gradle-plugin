@@ -81,16 +81,11 @@ abstract class PaperDevGradlePlugin : Plugin<Project> {
     private fun Project.registerTasks() {
         val collectBaseClasses = registerCollectBaseClassesTask()
         val findEntryNamespaces = registerFindEntryNamespacesTask(collectBaseClasses)
-        val pluginYaml = tasks.register<PaperPluginYmlTask>(PAPER_PLUGIN_YML_TASK_NAME) {
-            group = TASK_GROUP
-            description = "Generates a paper-plugin.yml file for the project."
-
-            pluginYml = provider { this@registerTasks.extensions.findByType<PaperPluginYml>() }
-            outputDir = paperDevDir(name)
-
-            dependsOn(findEntryNamespaces)
+        val pluginYaml = registerPaperPluginYmlTask().apply {
+            configure {
+                dependsOn(findEntryNamespaces)
+            }
         }
-
         val paperLibrariesJson = registerPaperLibrariesJsonTask()
 
         val generatePluginLoader = registerGeneratePluginLoaderTask()
@@ -148,8 +143,6 @@ abstract class PaperDevGradlePlugin : Plugin<Project> {
         return finder.find(namespaces).also { property.convention(it) }
     }
 
-    private fun Project.paperDevDir(path: String) = layout.buildDirectory.dir("$PAPER_DEV_DIR/$path")
-
     companion object {
         private const val PLUGIN_YML_EXTENSION = "pluginYml"
 
@@ -157,7 +150,6 @@ abstract class PaperDevGradlePlugin : Plugin<Project> {
 
         internal const val TASK_GROUP = "paper development"
         const val FIND_ENTRY_NAMESPACES_TASK_NAME = "findEntryNamespaces"
-        const val PAPER_PLUGIN_YML_TASK_NAME = "paperPluginYml"
 
         const val PAPER_DEV_DIR = "paperDev"
     }
