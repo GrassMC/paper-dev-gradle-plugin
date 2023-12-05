@@ -32,46 +32,56 @@ import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
 import org.gradle.kotlin.dsl.register
 
+/**
+ * Generates a json file contains repositories and dependencies in the project.
+ */
 @CacheableTask
 abstract class PaperLibrariesJsonTask : DefaultTask() {
+    /**
+     * The resolved component result from a [org.gradle.api.artifacts.Configuration].
+     */
     @get:Input
-    abstract val librariesRootComponent: Property<ResolvedComponentResult>
+    abstract val resolvedComponentResult: Property<ResolvedComponentResult>
 
+    /**
+     * The output file to write the generated json to.
+     */
     @get:OutputFile
     abstract val paperLibrariesJson: RegularFileProperty
 
     @TaskAction
     fun generate() {
-        val librariesJson = buildMap {
-            project.repositories
-                .collectMavenRepositoriesWithoutCentral()
-                .associate { it.name to it.url.toString() }
-                .also { put("repositories", it) }
-                .also {
-                    logger.debug("Collected repository without Maven Central:")
-                    it.forEach { repos ->
-                        logger.debug("    - ${repos.key}: ${repos.value}")
-                    }
-                }
+        val reposWithoutMavenCentral = collectRepositoriesWithoutMavenCentral()
+        val moduleVersions = collectDependencies()
 
-            librariesRootComponent
-                .get()
-                .collectModuleVersions()
-                .also { put("dependencies", it) }
-                .also {
-                    logger.debug("Collected root dependencies:")
-                    it.forEach { d ->
-                        logger.debug("    - $d")
-                    }
-                }
+        val librariesJson = mapOf(
+            "repositories" to reposWithoutMavenCentral,
+            "dependencies" to moduleVersions
+        )
+        writeJsonToFile(JsonOutput.toJson(librariesJson))
+    }
+
+    private fun collectRepositoriesWithoutMavenCentral() = project.repositories
+        .collectMavenRepositoriesWithoutCentral()
+        .associate { it.name to it.url.toString() }
+        .also { logCollectedData("repository without Maven Central", it.values) }
+
+    private fun collectDependencies() = resolvedComponentResult
+        .get()
+        .collectModuleVersions()
+        .also { logCollectedData("root dependencies", it) }
+
+    private fun writeJsonToFile(json: String) {
+        logger.debug("Generated JSON: $json")
+        paperLibrariesJson.asFile.get().writeText(json)
+        logger.debug("Paper libraries JSON file generated at: ${paperLibrariesJson.get().asFile.path}")
+    }
+
+    private fun <T> logCollectedData(logDescription: String, data: Collection<T>) {
+        logger.debug("Collected $logDescription:")
+        for (it in data) {
+            logger.debug("    - {}", it)
         }
-
-        JsonOutput.toJson(librariesJson)
-            .also { logger.debug("Generated JSON: $it") }
-            .also {
-                paperLibrariesJson.asFile.get().writeText(it)
-                logger.debug("Paper libraries JSON file generated at: ${paperLibrariesJson.get().asFile.path}")
-            }
     }
 
     private fun RepositoryHandler.collectMavenRepositoriesWithoutCentral() = filterIsInstance<MavenArtifactRepository>()
@@ -92,11 +102,11 @@ internal fun Project.registerPaperLibrariesJsonTask() =
         group = PaperDevGradlePlugin.TASK_GROUP
         description = "Generates a json file contains repositories and dependencies in the project."
 
-        librariesRootComponent.convention(resolvedPaperLibsConfigurationResult)
+        resolvedComponentResult.convention(paperLibsRootResolution)
         paperLibrariesJson.convention(layout.buildDirectory.file(DEFAULT_PAPER_LIBRARIES_JSON_PATH))
     }
 
-private val Project.resolvedPaperLibsConfigurationResult
+private val Project.paperLibsRootResolution
     get() = configurations
         .named(PaperDevGradlePlugin.PAPER_LIBS_CONFIGURATION_NAME)
         .map { it.incoming.resolutionResult.root }
