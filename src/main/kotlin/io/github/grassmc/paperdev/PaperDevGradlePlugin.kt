@@ -27,6 +27,8 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.plugins.JavaPlugin
 import org.gradle.api.provider.Property
+import org.gradle.api.tasks.SourceSet
+import org.gradle.api.tasks.SourceSetContainer
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.jvm.tasks.Jar
 import org.gradle.kotlin.dsl.*
@@ -90,7 +92,13 @@ abstract class PaperDevGradlePlugin : Plugin<Project> {
         }
 
         val paperLibrariesJson = registerPaperLibrariesJsonTask()
-        registerGeneratePluginLoaderTask()
+
+        val generatePluginLoader = registerGeneratePluginLoaderTask()
+        plugins.withType<JavaPlugin> {
+            extensions.getByType<SourceSetContainer>().named(SourceSet.MAIN_SOURCE_SET_NAME) {
+                java.srcDirs(generatePluginLoader.map { it.generatedDirectory })
+            }
+        }
 
         tasks.withType<Jar> {
             dependsOn(pluginYaml, paperLibrariesJson)
