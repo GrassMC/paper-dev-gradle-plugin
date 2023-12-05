@@ -20,12 +20,9 @@ import io.github.grassmc.paperdev.PaperDevGradlePlugin
 import org.gradle.api.DefaultTask
 import org.gradle.api.Project
 import org.gradle.api.file.DirectoryProperty
-import org.gradle.api.plugins.JavaPlugin
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
-import org.gradle.kotlin.dsl.getByType
 import org.gradle.kotlin.dsl.register
-import org.gradle.kotlin.dsl.withType
 import org.intellij.lang.annotations.Language
 
 /**
@@ -55,22 +52,19 @@ abstract class GeneratePluginLoaderTask : DefaultTask() {
             pluginClassLoader.writeText(PAPER_LIBS_LOADER_JAVA_TEMPLATE)
         }
     }
+
+    companion object {
+        internal const val DEFAULT_NAME = "generatePluginLoader"
+    }
 }
 
-internal fun Project.registerGeneratePluginLoaderTask() {
-    val generatePluginLoader = tasks.register<GeneratePluginLoaderTask>("generatePluginLoader") {
+internal fun Project.registerGeneratePluginLoaderTask() =
+    tasks.register<GeneratePluginLoaderTask>(GeneratePluginLoaderTask.DEFAULT_NAME) {
         group = PaperDevGradlePlugin.TASK_GROUP
         description = "Generates a plugin loader java source that will load the plugin libraries."
 
         generatedDirectory.convention(layout.buildDirectory.dir(DEFAULT_GENERATED_DIR))
     }
-
-    plugins.withType<JavaPlugin> {
-        extensions.getByType<SourceSetContainer>().named(SourceSet.MAIN_SOURCE_SET_NAME) {
-            java.srcDirs(generatePluginLoader.map { it.generatedDirectory })
-        }
-    }
-}
 
 internal const val DEFAULT_GENERATED_DIR = "${PaperDevGradlePlugin.PAPER_DEV_DIR}/generatedPluginLoader"
 internal const val PAPER_LIBS_LOADER_JAVA_PATH = "io/github/grassmc/paperdev/loader/PaperLibsLoader.java"

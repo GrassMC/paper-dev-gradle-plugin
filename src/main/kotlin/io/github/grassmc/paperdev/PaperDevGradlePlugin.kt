@@ -19,20 +19,12 @@ package io.github.grassmc.paperdev
 import io.github.grassmc.paperdev.dsl.PaperDevExtension
 import io.github.grassmc.paperdev.dsl.PaperPluginYml
 import io.github.grassmc.paperdev.dsl.PaperVersions
-import io.github.grassmc.paperdev.namespace.EmptyNamespace
-import io.github.grassmc.paperdev.namespace.PluginNamespace
-import io.github.grassmc.paperdev.namespace.PluginNamespaceFinder
-import io.github.grassmc.paperdev.tasks.CollectBaseClassesTask
-import io.github.grassmc.paperdev.tasks.PaperLibrariesJsonTask
-import io.github.grassmc.paperdev.tasks.PaperPluginYmlTask
-import io.github.grassmc.paperdev.tasks.registerGeneratePluginLoaderTask
+import io.github.grassmc.paperdev.tasks.*
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.plugins.JavaPlugin
-import org.gradle.api.provider.Property
 import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.SourceSetContainer
-import org.gradle.api.tasks.TaskProvider
 import org.gradle.jvm.tasks.Jar
 import org.gradle.kotlin.dsl.*
 
@@ -47,7 +39,7 @@ abstract class PaperDevGradlePlugin : Plugin<Project> {
         registerPaperDevExtension()
         registerPluginYmlExtension()
         afterEvaluate {
-            registerTasks()
+            configureTasks()
         }
     }
 
@@ -81,38 +73,24 @@ abstract class PaperDevGradlePlugin : Plugin<Project> {
         }
 
 
-    private fun Project.registerTasks() {
-        val collectBaseClasses = tasks.register<CollectBaseClassesTask>(COLLECT_BASE_CLASSES_TASK_NAME) {
-            description = "Collects base classes of the compiled classes from the project."
-
-            classes.from(compiledClasses())
-            skipNestedClass.convention(true)
-            destinationDir = temporaryDirFactory.create()
+    private fun Project.configureTasks() {
+        val generatePluginLoader = registerGeneratePluginLoaderTask()
+        extensions.getByType<SourceSetContainer>().named(SourceSet.MAIN_SOURCE_SET_NAME) {
+            java.srcDirs(generatePluginLoader.map { it.generatedDirectory })
         }
 
-        val findEntryNamespaces = registerFindEntryNamespacesTask(collectBaseClasses)
-        val pluginYaml = tasks.register<PaperPluginYmlTask>(PAPER_PLUGIN_YML_TASK_NAME) {
-            group = TASK_GROUP
-            description = "Generates a paper-plugin.yml file for the project."
-
-            pluginYml = provider { this@registerTasks.extensions.findByType<PaperPluginYml>() }
-            outputDir = paperDevDir(name)
-
-            dependsOn(findEntryNamespaces)
+        val collectBaseClasses = registerCollectBaseClassesTask()
+        val findEntryNamespaces = registerFindEntryNamespacesTask(collectBaseClasses.map { it.destinationDir }).apply {
+            configure {
+                dependsOn(collectBaseClasses)
+            }
         }
-
-        val paperLibrariesJson = tasks.register<PaperLibrariesJsonTask>("paperLibrariesJson") {
-            group = TASK_GROUP
-            description = "Generates a json file contains repositories and dependencies in the project."
-
-            librariesRootComponent = configurations
-                .named(PAPER_LIBS_CONFIGURATION_NAME)
-                .map { it.incoming.resolutionResult.root }
-            paperLibrariesJson = paperDevFile("$name/paper-libraries.json")
+        val pluginYaml = registerPaperPluginYmlTask().apply {
+            configure {
+                dependsOn(findEntryNamespaces)
+            }
         }
-
-        registerGeneratePluginLoaderTask()
-
+        val paperLibrariesJson = registerPaperLibrariesJsonTask()
         tasks.withType<Jar> {
             dependsOn(pluginYaml, paperLibrariesJson)
             from(pluginYaml.map { it.outputDir })
@@ -120,68 +98,11 @@ abstract class PaperDevGradlePlugin : Plugin<Project> {
         }
     }
 
-    private fun Project.compiledClasses() = extensions
-        .getByType<SourceSetContainer>()
-        .getByName(SourceSet.MAIN_SOURCE_SET_NAME)
-        .output
-        .classesDirs
-
-    private fun Project.registerFindEntryNamespacesTask(collectBaseClasses: TaskProvider<CollectBaseClassesTask>) =
-        tasks.register(FIND_ENTRY_NAMESPACES_TASK_NAME) {
-            group = TASK_GROUP
-            description = "Finds the entry namespaces and assigns default values to the pluginYml extension."
-
-            dependsOn(collectBaseClasses)
-            doFirst {
-                val namespaces = collectBaseClasses.get().destinationDir.asFileTree.files.associate {
-                    it.name to it.readLines().toSet()
-                }
-                this@registerFindEntryNamespacesTask.extensions.configure<PaperPluginYml> {
-                    findAndSetDefaultEntryNamespace(namespaces, main, PluginNamespaceFinder.EntryFor.Main)
-                        .takeUnless { it is EmptyNamespace }
-                        ?.let { logger.debug("Main namespace founded: {}", it) }
-                    findAndSetDefaultEntryNamespace(namespaces, loader, PluginNamespaceFinder.EntryFor.Loader)
-                        .takeUnless { it is EmptyNamespace }
-                        ?.let { logger.debug("Loader namespace founded: {}", it) }
-                    findAndSetDefaultEntryNamespace(
-                        namespaces,
-                        bootstrapper,
-                        PluginNamespaceFinder.EntryFor.Bootstrapper
-                    )
-                        .takeUnless { it is EmptyNamespace }
-                        ?.let { logger.debug("Bootstrapper namespace founded: {}", it) }
-                }
-            }
-        }
-
-    private fun findAndSetDefaultEntryNamespace(
-        namespaces: Map<String, Set<String>>,
-        property: Property<PluginNamespace>,
-        finder: PluginNamespaceFinder.EntryFor
-    ): PluginNamespace {
-        val currentNamespace = property.orNull
-        if (currentNamespace != null && currentNamespace != EmptyNamespace) {
-            return EmptyNamespace
-        }
-
-        return finder.find(namespaces).also { property.convention(it) }
-    }
-
-    private fun Project.paperDevFile(path: String) = layout.buildDirectory.file("$PAPER_DEV_DIR/$path")
-
-    private fun Project.paperDevDir(path: String) = layout.buildDirectory.dir("$PAPER_DEV_DIR/$path")
-
     companion object {
-        private const val PLUGIN_YML_EXTENSION = "pluginYml"
-
         const val PAPER_LIBS_CONFIGURATION_NAME = "paperLibs"
+        const val PAPER_DEV_DIR = "paperDev"
 
         internal const val TASK_GROUP = "paper development"
-        const val FIND_ENTRY_NAMESPACES_TASK_NAME = "findEntryNamespaces"
-        const val PAPER_PLUGIN_YML_TASK_NAME = "paperPluginYml"
-
-        const val COLLECT_BASE_CLASSES_TASK_NAME = "collectBaseClasses"
-
-        const val PAPER_DEV_DIR = "paperDev"
+        private const val PLUGIN_YML_EXTENSION = "pluginYml"
     }
 }
