@@ -20,7 +20,7 @@ import io.github.grassmc.paperdev.tasks.DEFAULT_GENERATED_DIR
 import io.github.grassmc.paperdev.tasks.GeneratePluginLoaderTask
 import io.github.grassmc.paperdev.tasks.PAPER_LIBS_LOADER_JAVA_PATH
 import io.github.grassmc.paperdev.tasks.PAPER_LIBS_LOADER_JAVA_TEMPLATE
-import org.gradle.testkit.runner.TaskOutcome
+import org.gradle.testkit.runner.BuildResult
 import kotlin.io.path.exists
 import kotlin.io.path.readText
 import kotlin.test.Test
@@ -31,21 +31,25 @@ class GeneratePluginLoaderTaskTest : FunctionalTestBase() {
     @Test
     fun `should generate PaperLibsLoader java src`() {
         usePlugin()
-        val result = runGeneratePluginLoaderTask()
+        runGeneratePluginLoaderTask {
+            assertTaskSuccess(GeneratePluginLoaderTask.DEFAULT_NAME)
+        }
         val paperLibsLoaderFile = buildDir.resolve("$DEFAULT_GENERATED_DIR/$PAPER_LIBS_LOADER_JAVA_PATH")
-        assertEquals(TaskOutcome.SUCCESS, result.task(":${GeneratePluginLoaderTask.DEFAULT_NAME}")!!.outcome)
-        assertTrue(paperLibsLoaderFile.exists())
         assertEquals(PAPER_LIBS_LOADER_JAVA_TEMPLATE, paperLibsLoaderFile.readText())
+        assertTrue(paperLibsLoaderFile.exists())
     }
 
     @Test
     fun `should up-to-date when generated exist`() {
         usePlugin()
-        val firstRun = runGeneratePluginLoaderTask()
-        val secondRun = runGeneratePluginLoaderTask()
-        assertEquals(TaskOutcome.SUCCESS, firstRun.task(":${GeneratePluginLoaderTask.DEFAULT_NAME}")!!.outcome)
-        assertEquals(TaskOutcome.UP_TO_DATE, secondRun.task(":${GeneratePluginLoaderTask.DEFAULT_NAME}")!!.outcome)
+        runGeneratePluginLoaderTask {
+            assertTaskSuccess(GeneratePluginLoaderTask.DEFAULT_NAME)
+        }
+        runGeneratePluginLoaderTask {
+            assertTaskUpToDate(GeneratePluginLoaderTask.DEFAULT_NAME)
+        }
     }
 
-    private fun runGeneratePluginLoaderTask() = runProject(GeneratePluginLoaderTask.DEFAULT_NAME)
+    private fun runGeneratePluginLoaderTask(action: BuildResult.() -> Unit) =
+        runProject(GeneratePluginLoaderTask.DEFAULT_NAME, action = action)
 }

@@ -19,10 +19,12 @@ package io.github.grassmc.paperdev
 
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner
+import org.gradle.testkit.runner.TaskOutcome
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.io.TempDir
 import java.nio.file.Path
 import kotlin.io.path.*
+import kotlin.test.assertEquals
 
 
 @Suppress("unused", "MemberVisibilityCanBePrivate")
@@ -75,6 +77,14 @@ abstract class FunctionalTestBase {
             .copyToRecursively(this.projectDir, followLinks = false, overwrite = true)
     }
 
-    protected fun runProject(vararg args: String): BuildResult =
-        gradleRunner.withArguments(*args, "--stacktrace").build()
+    protected fun runProject(vararg args: String, action: BuildResult.() -> Unit = {}): BuildResult =
+        gradleRunner.withArguments(*args, "--stacktrace").build().apply(action)
+
+    protected fun BuildResult.assertTaskSuccess(name: String) {
+        assertEquals(TaskOutcome.SUCCESS, task(":$name")?.outcome)
+    }
+
+    protected fun BuildResult.assertTaskUpToDate(name: String) {
+        assertEquals(TaskOutcome.UP_TO_DATE, task(":$name")?.outcome)
+    }
 }
