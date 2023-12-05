@@ -22,16 +22,11 @@ import io.github.grassmc.paperdev.dsl.PaperVersions
 import io.github.grassmc.paperdev.namespace.EmptyNamespace
 import io.github.grassmc.paperdev.namespace.PluginNamespace
 import io.github.grassmc.paperdev.namespace.PluginNamespaceFinder
-import io.github.grassmc.paperdev.tasks.CollectBaseClassesTask
-import io.github.grassmc.paperdev.tasks.PaperLibrariesJsonTask
-import io.github.grassmc.paperdev.tasks.PaperPluginYmlTask
-import io.github.grassmc.paperdev.tasks.registerGeneratePluginLoaderTask
+import io.github.grassmc.paperdev.tasks.*
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.plugins.JavaPlugin
 import org.gradle.api.provider.Property
-import org.gradle.api.tasks.SourceSet
-import org.gradle.api.tasks.SourceSetContainer
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.jvm.tasks.Jar
 import org.gradle.kotlin.dsl.*
@@ -82,14 +77,7 @@ abstract class PaperDevGradlePlugin : Plugin<Project> {
 
 
     private fun Project.registerTasks() {
-        val collectBaseClasses = tasks.register<CollectBaseClassesTask>(COLLECT_BASE_CLASSES_TASK_NAME) {
-            description = "Collects base classes of the compiled classes from the project."
-
-            classes.from(compiledClasses())
-            skipNestedClass.convention(true)
-            destinationDir = temporaryDirFactory.create()
-        }
-
+        val collectBaseClasses = registerCollectBaseClassesTask()
         val findEntryNamespaces = registerFindEntryNamespacesTask(collectBaseClasses)
         val pluginYaml = tasks.register<PaperPluginYmlTask>(PAPER_PLUGIN_YML_TASK_NAME) {
             group = TASK_GROUP
@@ -119,12 +107,6 @@ abstract class PaperDevGradlePlugin : Plugin<Project> {
             from(paperLibrariesJson.map { it.paperLibrariesJson })
         }
     }
-
-    private fun Project.compiledClasses() = extensions
-        .getByType<SourceSetContainer>()
-        .getByName(SourceSet.MAIN_SOURCE_SET_NAME)
-        .output
-        .classesDirs
 
     private fun Project.registerFindEntryNamespacesTask(collectBaseClasses: TaskProvider<CollectBaseClassesTask>) =
         tasks.register(FIND_ENTRY_NAMESPACES_TASK_NAME) {
@@ -179,8 +161,6 @@ abstract class PaperDevGradlePlugin : Plugin<Project> {
         internal const val TASK_GROUP = "paper development"
         const val FIND_ENTRY_NAMESPACES_TASK_NAME = "findEntryNamespaces"
         const val PAPER_PLUGIN_YML_TASK_NAME = "paperPluginYml"
-
-        const val COLLECT_BASE_CLASSES_TASK_NAME = "collectBaseClasses"
 
         const val PAPER_DEV_DIR = "paperDev"
     }

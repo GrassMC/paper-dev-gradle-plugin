@@ -19,11 +19,15 @@ package io.github.grassmc.paperdev.tasks
 import io.github.grassmc.paperdev.utils.isNestedClass
 import io.github.grassmc.paperdev.utils.readBaseClasses
 import org.gradle.api.DefaultTask
+import org.gradle.api.Project
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileType
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
+import org.gradle.kotlin.dsl.assign
+import org.gradle.kotlin.dsl.getByType
+import org.gradle.kotlin.dsl.register
 import org.gradle.work.ChangeType
 import org.gradle.work.InputChanges
 import kotlin.io.path.deleteIfExists
@@ -82,6 +86,21 @@ abstract class CollectBaseClassesTask : DefaultTask() {
     private fun String.namespace(): String = this.replace('/', '.')
 
     companion object {
+        internal const val DEFAULT_NAME = "collectBaseClasses"
         private const val CLASS_FILE_EXTENSION = ".class"
     }
 }
+
+internal fun Project.registerCollectBaseClassesTask() =
+    tasks.register<CollectBaseClassesTask>(CollectBaseClassesTask.DEFAULT_NAME) {
+        description = "Collects base classes from the project's classes directory."
+
+        classes.from(compiledClasses())
+        skipNestedClass.convention(true)
+        destinationDir = temporaryDirFactory.create()
+    }
+
+private fun Project.compiledClasses() = extensions
+    .getByType<SourceSetContainer>()
+    .named(SourceSet.MAIN_SOURCE_SET_NAME)
+    .map { it.output.classesDirs }
