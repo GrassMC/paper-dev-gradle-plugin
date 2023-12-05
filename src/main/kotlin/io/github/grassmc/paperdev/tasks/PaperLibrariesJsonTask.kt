@@ -17,7 +17,9 @@
 package io.github.grassmc.paperdev.tasks
 
 import groovy.json.JsonOutput
+import io.github.grassmc.paperdev.PaperDevGradlePlugin
 import org.gradle.api.DefaultTask
+import org.gradle.api.Project
 import org.gradle.api.artifacts.dsl.RepositoryHandler
 import org.gradle.api.artifacts.repositories.MavenArtifactRepository
 import org.gradle.api.artifacts.result.ResolvedComponentResult
@@ -28,6 +30,7 @@ import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
+import org.gradle.kotlin.dsl.register
 
 @CacheableTask
 abstract class PaperLibrariesJsonTask : DefaultTask() {
@@ -78,4 +81,25 @@ abstract class PaperLibrariesJsonTask : DefaultTask() {
         .mapNotNull { (it as? ResolvedDependencyResult)?.selected?.moduleVersion }
         .map { it.toString() }
         .distinct()
+
+    companion object {
+        internal const val DEFAULT_NAME = "paperLibrariesJson"
+    }
 }
+
+internal fun Project.registerPaperLibrariesJsonTask() =
+    tasks.register<PaperLibrariesJsonTask>(PaperLibrariesJsonTask.DEFAULT_NAME) {
+        group = PaperDevGradlePlugin.TASK_GROUP
+        description = "Generates a json file contains repositories and dependencies in the project."
+
+        librariesRootComponent.convention(resolvedPaperLibsConfigurationResult)
+        paperLibrariesJson.convention(layout.buildDirectory.file(DEFAULT_PAPER_LIBRARIES_JSON_PATH))
+    }
+
+private val Project.resolvedPaperLibsConfigurationResult
+    get() = configurations
+        .named(PaperDevGradlePlugin.PAPER_LIBS_CONFIGURATION_NAME)
+        .map { it.incoming.resolutionResult.root }
+
+internal const val DEFAULT_PAPER_LIBRARIES_JSON_PATH =
+    "${PaperDevGradlePlugin.PAPER_DEV_DIR}/${PaperLibrariesJsonTask.DEFAULT_NAME}/paper-libraries.json"

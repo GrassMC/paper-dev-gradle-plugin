@@ -89,16 +89,7 @@ abstract class PaperDevGradlePlugin : Plugin<Project> {
             dependsOn(findEntryNamespaces)
         }
 
-        val paperLibrariesJson = tasks.register<PaperLibrariesJsonTask>("paperLibrariesJson") {
-            group = TASK_GROUP
-            description = "Generates a json file contains repositories and dependencies in the project."
-
-            librariesRootComponent = configurations
-                .named(PAPER_LIBS_CONFIGURATION_NAME)
-                .map { it.incoming.resolutionResult.root }
-            paperLibrariesJson = paperDevFile("$name/paper-libraries.json")
-        }
-
+        val paperLibrariesJson = registerPaperLibrariesJsonTask()
         registerGeneratePluginLoaderTask()
 
         tasks.withType<Jar> {
@@ -148,8 +139,6 @@ abstract class PaperDevGradlePlugin : Plugin<Project> {
 
         return finder.find(namespaces).also { property.convention(it) }
     }
-
-    private fun Project.paperDevFile(path: String) = layout.buildDirectory.file("$PAPER_DEV_DIR/$path")
 
     private fun Project.paperDevDir(path: String) = layout.buildDirectory.dir("$PAPER_DEV_DIR/$path")
 
