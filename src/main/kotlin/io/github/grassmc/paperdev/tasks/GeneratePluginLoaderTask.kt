@@ -52,10 +52,14 @@ abstract class GeneratePluginLoaderTask : DefaultTask() {
             pluginClassLoader.writeText(PAPER_LIBS_LOADER_JAVA_TEMPLATE)
         }
     }
+
+    companion object {
+        internal const val DEFAULT_NAME = "generatePluginLoader"
+    }
 }
 
 internal fun Project.registerGeneratePluginLoaderTask() =
-    tasks.register<GeneratePluginLoaderTask>("generatePluginLoader") {
+    tasks.register<GeneratePluginLoaderTask>(GeneratePluginLoaderTask.DEFAULT_NAME) {
         group = PaperDevGradlePlugin.TASK_GROUP
         description = "Generates a plugin loader java source that will load the plugin libraries."
 
