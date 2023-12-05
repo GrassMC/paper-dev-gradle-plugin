@@ -39,7 +39,7 @@ abstract class PaperDevGradlePlugin : Plugin<Project> {
         registerPaperDevExtension()
         registerPluginYmlExtension()
         afterEvaluate {
-            registerTasks()
+            configureTasks()
         }
     }
 
@@ -73,7 +73,7 @@ abstract class PaperDevGradlePlugin : Plugin<Project> {
         }
 
 
-    private fun Project.registerTasks() {
+    private fun Project.configureTasks() {
         val generatePluginLoader = registerGeneratePluginLoaderTask()
         extensions.getByType<SourceSetContainer>().named(SourceSet.MAIN_SOURCE_SET_NAME) {
             java.srcDirs(generatePluginLoader.map { it.generatedDirectory })
