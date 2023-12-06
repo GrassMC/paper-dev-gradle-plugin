@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.4](https://github.com/GrassMC/paper-dev-gradle-plugin/compare/v0.2.3...v0.2.4) (2023-12-06)
+
+
+### Bug Fixes
+
+* PluginNamespace is not serializable ([#69](https://github.com/GrassMC/paper-dev-gradle-plugin/issues/69)) ([fe40bfc](https://github.com/GrassMC/paper-dev-gradle-plugin/commit/fe40bfc4aeb89e777066bfc6d32f8b344fd4fbdd))
+
 ## [0.2.3](https://github.com/GrassMC/paper-dev-gradle-plugin/compare/v0.2.2...v0.2.3) (2023-11-28)
 
 

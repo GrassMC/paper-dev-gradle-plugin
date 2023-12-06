@@ -16,17 +16,21 @@
 
 package io.github.grassmc.paperdev.namespace
 
+import java.io.Serializable
+
 /**
  * Represents a namespace which can be used to identify an entry point of some functionality,
  * such as a plugin main class, or a plugin loader class.
  */
-sealed interface PluginNamespace
+sealed interface PluginNamespace : Serializable
 
 /**
  * Represents an empty namespace.
  * `findEntryNamespaces` task will resolve to this namespace if entry points are found.
  */
-internal object EmptyNamespace : PluginNamespace
+internal object EmptyNamespace : PluginNamespace {
+    private fun readResolve(): Any = EmptyNamespace
+}
 
 internal data class SpecifiedNamespace(val className: String) : PluginNamespace {
     override fun toString() = className
