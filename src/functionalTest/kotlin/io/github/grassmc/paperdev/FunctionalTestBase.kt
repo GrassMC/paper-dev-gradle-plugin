@@ -27,6 +27,7 @@ import kotlin.io.path.*
 import kotlin.test.assertEquals
 
 
+@OptIn(ExperimentalPathApi::class)
 @Suppress("unused", "MemberVisibilityCanBePrivate")
 abstract class FunctionalTestBase {
     @TempDir
@@ -37,6 +38,7 @@ abstract class FunctionalTestBase {
 
     protected val buildDir: Path get() = projectDir.resolve("build")
     protected val javaSourceDir: Path get() = projectDir.resolve("src/main/java")
+    protected val kotlinSourceDir: Path get() = projectDir.resolve("src/main/kotlin")
 
     @BeforeEach
     fun setUp() {
@@ -58,23 +60,16 @@ abstract class FunctionalTestBase {
         buildScript.appendText(script)
     }
 
-    protected fun usePlugin(otherPlugins: String = "") {
-        appendBuildScript(
-            """
-            plugins {
-                id("io.github.grassmc.paper-dev")
-                $otherPlugins
-            }
-            """.trimIndent()
-        )
+    protected fun useBuildScript(name: String) {
+        val buildScript = javaClass.getResource("/build-scripts/$name.build.gradle.kts")!!.toURI().toPath()
+        buildScript.copyTo(this.buildScript, overwrite = true)
     }
 
-    @OptIn(ExperimentalPathApi::class)
-    protected fun useResourceProject(projectDir: String) {
-        requireNotNull(javaClass.getResource("/$projectDir/"))
-            .toURI()
-            .toPath()
-            .copyToRecursively(this.projectDir, followLinks = false, overwrite = true)
+    protected fun useSource(name: String, isKotlinSrc: Boolean = false) {
+        val src = javaClass.getResource("/sources/$name")!!.toURI().toPath()
+        val dest = if (isKotlinSrc) kotlinSourceDir else javaSourceDir
+        dest.createDirectories()
+        src.copyToRecursively(dest, followLinks = false, overwrite = true)
     }
 
     protected fun runProject(vararg args: String, action: BuildResult.() -> Unit = {}): BuildResult =

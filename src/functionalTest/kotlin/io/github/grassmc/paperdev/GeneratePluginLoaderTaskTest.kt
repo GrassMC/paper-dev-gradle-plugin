@@ -30,7 +30,7 @@ import kotlin.test.assertTrue
 class GeneratePluginLoaderTaskTest : FunctionalTestBase() {
     @Test
     fun `should generate PaperLibsLoader java src`() {
-        usePlugin()
+        setupProject()
         runGeneratePluginLoaderTask {
             assertTaskSuccess(GeneratePluginLoaderTask.DEFAULT_NAME)
         }
@@ -41,13 +41,17 @@ class GeneratePluginLoaderTaskTest : FunctionalTestBase() {
 
     @Test
     fun `should up-to-date when generated exist`() {
-        usePlugin()
+        setupProject()
         runGeneratePluginLoaderTask {
             assertTaskSuccess(GeneratePluginLoaderTask.DEFAULT_NAME)
         }
         runGeneratePluginLoaderTask {
             assertTaskUpToDate(GeneratePluginLoaderTask.DEFAULT_NAME)
         }
+    }
+
+    private fun setupProject() {
+        useBuildScript("without-configuration")
     }
 
     private fun runGeneratePluginLoaderTask(action: BuildResult.() -> Unit) =

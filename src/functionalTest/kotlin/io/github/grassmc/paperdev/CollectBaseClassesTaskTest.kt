@@ -29,31 +29,36 @@ import kotlin.test.assertTrue
 class CollectBaseClassesTaskTest : FunctionalTestBase() {
     @Test
     fun `should collect bases to destination dir`() {
-        useResourceProject("sample-paper-plugin")
+        setupProject()
         runCollectBaseClassesTask {
             assertTaskSuccess(CollectBaseClassesTask.DEFAULT_NAME)
         }
         val destinationDir = buildDir.resolve("tmp/${CollectBaseClassesTask.DEFAULT_NAME}")
         assertTrue(destinationDir.exists())
-        val generatedClassLoaderClass = destinationDir.resolve(
+
+        val generatedClassLoader = destinationDir.resolve(
             PAPER_LIBS_LOADER_JAVA_PATH.removeSuffix(".java").replace('/', '.')
         )
-        assertTrue(generatedClassLoaderClass.exists())
-        val mainClass = destinationDir.resolve("io.github.grassmc.paperdev.sample.SamplePaperPlugin")
-        assertTrue(mainClass.exists())
-        assertEquals("org/bukkit/plugin/java/JavaPlugin", mainClass.readText().trimEnd())
-        val otherClass = destinationDir.resolve("io.github.grassmc.paperdev.sample.TestClass1")
-        assertTrue(otherClass.exists())
-        assertEquals("java/lang/Runnable", otherClass.readText().trimEnd())
-        val nestedClass = destinationDir.resolve("io.github.grassmc.paperdev.sample.SamplePaperPlugin\$Nested")
-        assertFalse(nestedClass.exists())
-        val emptyBaseClass = destinationDir.resolve("io.github.grassmc.paperdev.sample.WithEmptyBase")
-        assertFalse(emptyBaseClass.exists())
+        assertTrue(generatedClassLoader.exists())
+
+        val samplePaperPlugin = destinationDir.resolve("io.github.grassmc.paperdev.sample.SamplePaperPlugin")
+        assertTrue(samplePaperPlugin.exists())
+        assertEquals("org/bukkit/plugin/java/JavaPlugin", samplePaperPlugin.readText().trimEnd())
+
+        val sampleTask = destinationDir.resolve("io.github.grassmc.paperdev.sample.SampleTask")
+        assertTrue(sampleTask.exists())
+        assertEquals("java/lang/Runnable", sampleTask.readText().trimEnd())
+
+        val laterTaskNested = destinationDir.resolve("io.github.grassmc.paperdev.sample.SamplePaperPlugin\$LaterTask")
+        assertFalse(laterTaskNested.exists())
+
+        val user = destinationDir.resolve("io.github.grassmc.paperdev.sample.User")
+        assertFalse(user.exists())
     }
 
     @Test
     fun `should up-to-date when generated exist`() {
-        useResourceProject("sample-paper-plugin")
+        setupProject()
         runCollectBaseClassesTask {
             assertTaskSuccess(CollectBaseClassesTask.DEFAULT_NAME)
         }
@@ -64,7 +69,7 @@ class CollectBaseClassesTaskTest : FunctionalTestBase() {
 
     @Test
     fun `should include nested base classes when skipNestedClass is false`() {
-        useResourceProject("sample-paper-plugin")
+        setupProject()
         appendBuildScript(
             """
             afterEvaluate {
@@ -77,11 +82,18 @@ class CollectBaseClassesTaskTest : FunctionalTestBase() {
         runCollectBaseClassesTask {
             assertTaskSuccess(CollectBaseClassesTask.DEFAULT_NAME)
         }
+
         val destinationDir = buildDir.resolve("tmp/${CollectBaseClassesTask.DEFAULT_NAME}")
         assertTrue(destinationDir.exists())
-        val nestedClass = destinationDir.resolve("io.github.grassmc.paperdev.sample.SamplePaperPlugin\$Nested")
-        assertTrue(nestedClass.exists())
-        assertEquals("java/lang/Runnable", nestedClass.readText().trimEnd())
+
+        val laterTaskNested = destinationDir.resolve("io.github.grassmc.paperdev.sample.SamplePaperPlugin\$LaterTask")
+        assertTrue(laterTaskNested.exists())
+        assertEquals("org/bukkit/scheduler/BukkitRunnable", laterTaskNested.readText().trimEnd())
+    }
+
+    private fun setupProject() {
+        useBuildScript("without-configuration")
+        useSource("simple-java")
     }
 
     private fun runCollectBaseClassesTask(action: BuildResult.() -> Unit) =
